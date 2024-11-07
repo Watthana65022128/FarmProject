@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'fram_list.dart';
+import 'profile.dart';
 
 class Createfarm extends StatefulWidget {
   const Createfarm({super.key});
@@ -83,10 +84,10 @@ class _CreatefarmState extends State<Createfarm> {
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
         _showSnackBar('บันทึกข้อมูลไร่ "${responseData['name']}" สำเร็จ');
-        
+
         // เคลียร์ฟอร์ม
         _clearForm();
-        
+
         // นำผู้ใช้ไปยังหน้ารายการไร่
         if (mounted) {
           Navigator.pushReplacement(
@@ -96,7 +97,8 @@ class _CreatefarmState extends State<Createfarm> {
         }
       } else {
         final errorData = json.decode(response.body);
-        _showSnackBar(errorData['error'] ?? 'เกิดข้อผิดพลาดในการบันทึกข้อมูล', isError: true);
+        _showSnackBar(errorData['error'] ?? 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+            isError: true);
       }
     } catch (e) {
       _showSnackBar('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์', isError: true);
@@ -129,8 +131,29 @@ class _CreatefarmState extends State<Createfarm> {
       appBar: AppBar(
         title: const Text('สร้างไร่'),
         centerTitle: true,
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF3FCEE),
+        foregroundColor: Colors.black,
+        actions: [
+          IconButton(
+            icon: const CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Icon(
+                Icons.person,
+                color: Colors.black,
+              ),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      const ProfilePage(), // สร้างหน้า ProfilePage
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 10), // เพิ่มระยะห่างจากขอบ
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -139,7 +162,9 @@ class _CreatefarmState extends State<Createfarm> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 20,),
+              const SizedBox(
+                height: 20,
+              ),
               Image.asset(
                 'assets/logo.png',
                 height: 120,
