@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'bottom_bar.dart';
-import 'register.dart';
+import 'screen/register.dart';
 import 'createfarm.dart';
-import 'profile.dart';
+import 'screen/profile.dart';
+import 'screen/login.dart';
+
 
 void main() {
   runApp(MyApp());
@@ -22,7 +24,7 @@ class MyApp extends StatelessWidget {
           elevation: 0, 
         ),
       ),
-      home: const Createfarm(),
+      home:  const CreateFarmPage(),
     );
   }
 }

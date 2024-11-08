@@ -1,128 +1,67 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../models/farm_model.dart';
+import '../services/farm_service.dart';
+import 'screen/profile.dart';
 import 'fram_list.dart';
-import 'profile.dart';
 
-class Createfarm extends StatefulWidget {
-  const Createfarm({super.key});
+class CreateFarmPage extends StatefulWidget {
+  const CreateFarmPage({super.key});
 
   @override
-  _CreatefarmState createState() => _CreatefarmState();
+  _CreateFarmPageState createState() => _CreateFarmPageState();
 }
 
-class _CreatefarmState extends State<Createfarm> {
+class _CreateFarmPageState extends State<CreateFarmPage> {
+  final TextEditingController _nameController = TextEditingController();
+  final FarmService _farmService = FarmService();
+  bool _isLoading = false;
   String? _startMonth;
   String? _endMonth;
-  final TextEditingController _name = TextEditingController();
-  bool _isLoading = false; // เพิ่มตัวแปรสำหรับแสดง loading state
 
   final List<String> months = [
-    'มกราคม',
-    'กุมภาพันธ์',
-    'มีนาคม',
-    'เมษายน',
-    'พฤษภาคม',
-    'มิถุนายน',
-    'กรกฎาคม',
-    'สิงหาคม',
-    'กันยายน',
-    'ตุลาคม',
-    'พฤศจิกายน',
-    'ธันวาคม',
+    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
   ];
-
-  // แสดง SnackBar แบบ custom
-  void _showSnackBar(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
-
-  // ตรวจสอบความถูกต้องของข้อมูล
-  bool _validateInputs() {
-    if (_name.text.isEmpty) {
-      _showSnackBar('กรุณากรอกชื่อไร่', isError: true);
-      return false;
-    }
-    if (_startMonth == null) {
-      _showSnackBar('กรุณาเลือกเดือนเริ่มต้น', isError: true);
-      return false;
-    }
-    if (_endMonth == null) {
-      _showSnackBar('กรุณาเลือกเดือนสิ้นสุด', isError: true);
-      return false;
-    }
-    return true;
-  }
-
-  Future<void> _saveFarmData() async {
-    if (!_validateInputs()) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    final url = Uri.parse('http://localhost:3000/api/farm');
-    final payload = {
-      'name': _name.text,
-      'startMonth': _startMonth,
-      'endMonth': _endMonth,
-    };
-
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode(payload),
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = json.decode(response.body);
-        _showSnackBar('บันทึกข้อมูลไร่ "${responseData['name']}" สำเร็จ');
-
-        // เคลียร์ฟอร์ม
-        _clearForm();
-
-        // นำผู้ใช้ไปยังหน้ารายการไร่
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const FarmList()),
-          );
-        }
-      } else {
-        final errorData = json.decode(response.body);
-        _showSnackBar(errorData['error'] ?? 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
-            isError: true);
-      }
-    } catch (e) {
-      _showSnackBar('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์', isError: true);
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  void _clearForm() {
-    _name.clear();
-    setState(() {
-      _startMonth = null;
-      _endMonth = null;
-    });
-  }
 
   @override
   void dispose() {
-    _name.dispose();
+    _nameController.dispose();
     super.dispose();
+  }
+
+  Future<void> _saveFarm() async {
+    if (_nameController.text.isEmpty || _startMonth == null || _endMonth == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final farm = FarmModel(
+      name: _nameController.text,
+      startMonth: _startMonth!,
+      endMonth: _endMonth!,
+    );
+
+    final success = await _farmService.createFarm(farm);
+    setState(() => _isLoading = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success ? 'บันทึกสำเร็จ' : 'เกิดข้อผิดพลาด'),
+        backgroundColor: success ? Colors.green : Colors.red,
+      ),
+    );
+
+    if (success) {
+      _nameController.clear();
+      setState(() {
+        _startMonth = null;
+        _endMonth = null;
+      });
+    }
   }
 
   @override
@@ -177,7 +116,7 @@ class _CreatefarmState extends State<Createfarm> {
                   child: Column(
                     children: [
                       TextField(
-                        controller: _name,
+                        controller: _nameController,
                         decoration: const InputDecoration(
                           labelText: 'ชื่อไร่',
                           border: OutlineInputBorder(),
@@ -233,7 +172,7 @@ class _CreatefarmState extends State<Createfarm> {
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  onPressed: _isLoading ? null : _saveFarmData,
+                  onPressed: _isLoading ? null : _saveFarm,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
@@ -253,30 +192,30 @@ class _CreatefarmState extends State<Createfarm> {
           ),
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.green[50],
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextButton.icon(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const FarmList()),
-                  );
-                },
-                icon: const Icon(Icons.list),
-                label: const Text('ดูรายการไร่ทั้งหมด'),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.green,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      // bottomNavigationBar: BottomAppBar(
+      //   color: Colors.green[50],
+      //   child: Padding(
+      //     padding: const EdgeInsets.symmetric(vertical: 8),
+      //     child: Row(
+      //       mainAxisAlignment: MainAxisAlignment.center,
+      //       children: [
+      //         TextButton.icon(
+      //           onPressed: () {
+      //             Navigator.pushReplacement(
+      //               context,
+      //               MaterialPageRoute(builder: (context) => const FarmList()),
+      //             );
+      //           },
+      //           icon: const Icon(Icons.list),
+      //           label: const Text('ดูรายการไร่ทั้งหมด'),
+      //           style: TextButton.styleFrom(
+      //             foregroundColor: Colors.green,
+      //           ),
+      //         ),
+      //       ],
+      //     ),
+      //   ),
+      // ),
     );
   }
 }
