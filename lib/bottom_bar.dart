@@ -16,6 +16,12 @@ class _BottomBarState extends State<BottomBar> {
     });
   }
 
+  void _onScanPressed() {
+    // ฟังก์ชั่นสำหรับเปิดสแกน QR Code
+    print('Scan button pressed');
+    // TODO: เพิ่มโค้ดสำหรับเปิดกล้องและสแกน QR Code
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,62 +30,60 @@ class _BottomBarState extends State<BottomBar> {
       ),
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
-        notchMargin: 2,
-        color: Colors.green, // ตั้งค่าสีพื้นหลังของ BottomAppBar เป็นสีเขียว
+        notchMargin: 4,
+        color: Colors.green,
         child: SizedBox(
-          height: 50.0, // ปรับขนาดความสูงของ BottomAppBar
+          height: 60.0,  // เพิ่มความสูงเล็กน้อยเพื่อรองรับปุ่มสแกน
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: <Widget>[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: <Widget>[
-                  IconButton(
-                    icon: Icon(
-                      Icons.home,
-                      color: _selectedIndex == 0 ? Colors.white : Colors.black, // เปลี่ยนสีไอคอนเมื่อเลือก
-                    ),
-                    onPressed: () => _onItemTapped(0),
+              // ปุ่มภาพรวม
+              Expanded(
+                child: IconButton(
+                  icon: Icon(
+                    Icons.dashboard,
+                    color: _selectedIndex == 0 ? Colors.white : Colors.black,
                   ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.receipt_long,
-                      color: _selectedIndex == 1 ? Colors.white : Colors.black, // เปลี่ยนสีไอคอนเมื่อเลือก
-                    ),
-                    onPressed: () => _onItemTapped(1),
-                  ),
-                ],
+                  onPressed: () => _onItemTapped(0),
+                ),
               ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
-                  IconButton(
-                    icon: Icon(
-                      Icons.account_balance_wallet,
-                      color: _selectedIndex == 2 ? Colors.white : Colors.black, // เปลี่ยนสีไอคอนเมื่อเลือก
-                    ),
-                    onPressed: () => _onItemTapped(2),
+              // ปุ่มรายการ
+              Expanded(
+                child: IconButton(
+                  icon: Icon(
+                    Icons.receipt_long,
+                    color: _selectedIndex == 1 ? Colors.white : Colors.black,
                   ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.person,
-                      color: _selectedIndex == 3 ? Colors.white : Colors.black, // เปลี่ยนสีไอคอนเมื่อเลือก
-                    ),
-                    onPressed: () => _onItemTapped(3),
+                  onPressed: () => _onItemTapped(1),
+                ),
+              ),
+              // เพิ่มช่องว่างตรงกลางสำหรับปุ่มสแกน
+              const Expanded(
+                child: SizedBox(),
+              ),
+              // ปุ่มงบประมาณ
+              Expanded(
+                child: IconButton(
+                  icon: Icon(
+                    Icons.account_balance_wallet,
+                    color: _selectedIndex == 2 ? Colors.white : Colors.black,
                   ),
-                ],
+                  onPressed: () => _onItemTapped(2),
+                ),
               ),
             ],
           ),
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Add scanning function here
-        },
-        child: const Icon(Icons.qr_code_scanner),
+        backgroundColor: Colors.green,
+        onPressed: _onScanPressed,
+        child: const Icon(
+          Icons.qr_code_scanner,
+          color: Colors.white,
+        ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }

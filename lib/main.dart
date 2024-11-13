@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'bottom_bar.dart';
-import 'screen/register.dart';
-import 'createfarm.dart';
-import 'screen/profile.dart';
-import 'screen/login.dart';
+import 'screens/register.dart';
+import 'screens/create_farm.dart';
+import 'screens/profile.dart';
+import 'screens/login.dart';
 
 
 void main() {

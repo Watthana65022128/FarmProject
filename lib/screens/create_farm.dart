@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/farm_model.dart';
 import '../services/farm_service.dart';
-import 'screen/profile.dart';
-import 'fram_list.dart';
+import 'profile.dart';
+import '../screens/fram_list.dart';
 
 class CreateFarmPage extends StatefulWidget {
   const CreateFarmPage({super.key});
@@ -19,8 +19,18 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
   String? _endMonth;
 
   final List<String> months = [
-    'มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
-    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'
+    'มกราคม',
+    'กุมภาพันธ์',
+    'มีนาคม',
+    'เมษายน',
+    'พฤษภาคม',
+    'มิถุนายน',
+    'กรกฎาคม',
+    'สิงหาคม',
+    'กันยายน',
+    'ตุลาคม',
+    'พฤศจิกายน',
+    'ธันวาคม'
   ];
 
   @override
@@ -30,9 +40,13 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
   }
 
   Future<void> _saveFarm() async {
-    if (_nameController.text.isEmpty || _startMonth == null || _endMonth == null) {
+    if (_nameController.text.isEmpty ||
+        _startMonth == null ||
+        _endMonth == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน'), backgroundColor: Colors.red),
+        const SnackBar(
+            content: Text('กรุณากรอกข้อมูลให้ครบถ้วน'),
+            backgroundColor: Colors.red),
       );
       return;
     }
@@ -50,7 +64,7 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(success ? 'บันทึกสำเร็จ' : 'เกิดข้อผิดพลาด'),
+        content: Text(success ? 'บันทึกสำเร็จ' : 'บันทึกล้มเหลว'),
         backgroundColor: success ? Colors.green : Colors.red,
       ),
     );
@@ -62,6 +76,13 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
         _endMonth = null;
       });
     }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FarmListPage(),
+      ),
+    );
   }
 
   @override
@@ -192,30 +213,31 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
           ),
         ),
       ),
-      // bottomNavigationBar: BottomAppBar(
-      //   color: Colors.green[50],
-      //   child: Padding(
-      //     padding: const EdgeInsets.symmetric(vertical: 8),
-      //     child: Row(
-      //       mainAxisAlignment: MainAxisAlignment.center,
-      //       children: [
-      //         TextButton.icon(
-      //           onPressed: () {
-      //             Navigator.pushReplacement(
-      //               context,
-      //               MaterialPageRoute(builder: (context) => const FarmList()),
-      //             );
-      //           },
-      //           icon: const Icon(Icons.list),
-      //           label: const Text('ดูรายการไร่ทั้งหมด'),
-      //           style: TextButton.styleFrom(
-      //             foregroundColor: Colors.green,
-      //           ),
-      //         ),
-      //       ],
-      //     ),
-      //   ),
-      // ),
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.green[50],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const FarmListPage()),
+                  );
+                },
+                icon: const Icon(Icons.list),
+                label: const Text('รายการไร่ทั้งหมด'),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.green,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
