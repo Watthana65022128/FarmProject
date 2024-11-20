@@ -50,7 +50,7 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
       );
       return;
     }
-
+    
     setState(() => _isLoading = true);
 
     final farm = FarmModel(
@@ -80,7 +80,7 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FarmListPage(),
+        builder: (context) => const FarmListPage(),
       ),
     );
   }
@@ -117,7 +117,7 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(30),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,

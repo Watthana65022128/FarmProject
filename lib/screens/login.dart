@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'register.dart';
+import '../models/user_model.dart';
+import '../auth/auth_service.dart';
+import '../screens/register.dart';
+import '../screens/create_farm.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,9 +13,73 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
+  final AuthService _authService = AuthService();
+
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // สร้าง User object จากข้อมูลที่กรอก
+      final user = User(
+        username: usernameController.text,
+        email: emailController.text,
+        password: passwordController.text,
+      );
+
+      final response = await _authService.login(user);
+
+      if (mounted) {
+        if (response) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('เข้าสู่ระบบสำเร็จ'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+          await Future.delayed(const Duration(seconds: 1));
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateFarmPage()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('อีเมลหรือรหัสผ่านไม่ถูกต้อง'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,18 +190,12 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 10),
                     SizedBox(
                       width: double.infinity,
                       height: 54,
                       child: ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            print("Email: ${emailController.text}");
-                            print("Password: ${passwordController.text}");
-                            // Handle login logic here
-                          }
-                        },
+                        onPressed: _isLoading ? null : _login,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
@@ -143,16 +204,25 @@ class _LoginPageState extends State<LoginPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
-                          'เข้าสู่ระบบ',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text(
+                                'เข้าสู่ระบบ',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 35),
                     Row(
                       children: [
                         Expanded(
@@ -164,7 +234,7 @@ class _LoginPageState extends State<LoginPage> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'หรือ',
+                            'หรือยังไม่มีบัญชี ?',
                             style: TextStyle(
                               color: Colors.grey.shade600,
                               fontSize: 14,
@@ -179,7 +249,6 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ],
                     ),
-              
                     TextButton(
                       onPressed: () {
                         Navigator.push(
@@ -189,7 +258,7 @@ class _LoginPageState extends State<LoginPage> {
                         );
                       },
                       child: const Text(
-                        ' ลงทะเบียน',
+                        'ลงทะเบียน',
                         style: TextStyle(
                           color: Colors.green,
                           fontSize: 16,
@@ -247,10 +316,11 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  @override
-  void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
-  }
+ @override
+void dispose() {
+  usernameController.dispose();
+  emailController.dispose();
+  passwordController.dispose();
+  super.dispose();
+}
 }

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/farm_model.dart';
 
 class FarmService {
-  final String baseUrl = 'http://192.168.1.134:3000/api';
+  final String baseUrl = 'http://10.50.10.185:3000/api';
 
   Future<bool> createFarm(FarmModel farm) async {
     final url = Uri.parse('$baseUrl/farm');
@@ -11,7 +11,10 @@ class FarmService {
     try {
       final response = await http.post(
         url,
-        headers: {'Content-Type': 'application/json'},
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: json.encode(farm.toJson()),
       );
 
@@ -87,7 +90,6 @@ class FarmService {
 
   Future<FarmModel?> getFarmId(int id) async {
     try {
-      // แก้ไข URL endpoint ให้ถูกต้อง
       final url = Uri.parse('$baseUrl/farm/$id');
       final response = await http.get(url);
 

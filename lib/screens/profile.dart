@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../screens/login.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -15,6 +16,63 @@ class _ProfilePageState extends State<ProfilePage> {
     'age': '25',
     'address': '123 ถนนสุขุมวิท กรุงเทพฯ',
   };
+
+  Future<void> _showLogoutConfirmationDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('ยืนยันการออกจากระบบ'),
+          content: const Text('คุณต้องการออกจากระบบใช่หรือไม่?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text(
+                'ยกเลิก',
+                style: TextStyle(color: Colors.grey),
+              ),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+            ),
+            TextButton(
+              child: const Text(
+                'ยืนยัน',
+                style: TextStyle(color: Colors.green),
+              ),
+              onPressed: () {
+                // ปิด Dialog
+                Navigator.of(dialogContext).pop();
+
+                // แสดง SnackBar และนำทางไปหน้า Login
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('ออกจากระบบสำเร็จ'),
+                      backgroundColor: Colors.green,
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+
+                  // นำทางไปหน้า Login และล้าง stack ทั้งหมดทันที
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const LoginPage(),
+                    ),
+                    (route) => false,
+                  );
+                }
+              },
+            ),
+          ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -121,9 +179,8 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 24),
                   TextButton(
-                    onPressed: () {
-                      // จัดการการออกจากระบบ
-                    },
+                    onPressed:
+                        _showLogoutConfirmationDialog, // เรียกใช้ Dialog ยืนยันการออกจากระบบ
                     child: const Text(
                       'ออกจากระบบ',
                       style: TextStyle(

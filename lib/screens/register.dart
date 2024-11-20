@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'login.dart';
+import '../models/user_model.dart';
+import '../auth/auth_service.dart';
+import '../widgets/custom_text_field_register.dart';
+import '../screens/login.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -10,6 +13,7 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
+  final _authService = AuthService();
 
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
@@ -18,6 +22,75 @@ class _RegisterPageState extends State<RegisterPage> {
       TextEditingController();
   final TextEditingController ageController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
+
+  bool _isLoading = false;
+
+  Future<void> _handleRegister() async {
+
+    if (passwordController.text.length < 6) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+    if (passwordController.text != confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('รหัสผ่านไม่ตรงกัน'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final user = User(
+        username: usernameController.text,
+        email: emailController.text,
+        password: passwordController.text,
+        age: int.parse(ageController.text),
+        address: addressController.text,
+      );
+
+      final success = await _authService.register(user);
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (success) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('ลงทะเบียนสำเร็จ'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content:
+                  Text('อีเมลนี้ถูกใช้งานแล้ว'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,20 +131,20 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    _buildTextField(
+                    CustomTextField(
                       controller: usernameController,
                       labelText: 'ชื่อผู้ใช้',
                       icon: Icons.person,
                     ),
                     const SizedBox(height: 20),
-                    _buildTextField(
+                    CustomTextField(
                       controller: emailController,
                       labelText: 'อีเมล',
                       icon: Icons.email,
                       keyboardType: TextInputType.emailAddress,
                     ),
                     const SizedBox(height: 20),
-                    _buildTextField(
+                    CustomTextField(
                       controller: passwordController,
                       labelText: 'รหัสผ่าน',
                       icon: Icons.lock,
@@ -79,21 +152,21 @@ class _RegisterPageState extends State<RegisterPage> {
                       helperText: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
                     ),
                     const SizedBox(height: 20),
-                    _buildTextField(
+                    CustomTextField(
                       controller: confirmPasswordController,
                       labelText: 'ยืนยันรหัสผ่าน',
                       icon: Icons.lock_outline,
                       obscureText: true,
                     ),
                     const SizedBox(height: 20),
-                    _buildTextField(
+                    CustomTextField(
                       controller: ageController,
                       labelText: 'อายุ',
                       icon: Icons.cake,
                       keyboardType: TextInputType.number,
                     ),
                     const SizedBox(height: 20),
-                    _buildTextField(
+                    CustomTextField(
                       controller: addressController,
                       labelText: 'ที่อยู่',
                       icon: Icons.home,
@@ -103,15 +176,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       width: double.infinity,
                       height: 54,
                       child: ElevatedButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            print("Username: ${usernameController.text}");
-                            print("Email: ${emailController.text}");
-                            print("Password: ${passwordController.text}");
-                            print("Age: ${ageController.text}");
-                            print("Address: ${addressController.text}");
-                          }
-                        },
+                        onPressed: _isLoading ? null : _handleRegister,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
@@ -120,13 +185,16 @@ class _RegisterPageState extends State<RegisterPage> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: const Text(
-                          'ลงทะเบียน',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        child: _isLoading
+                            ? const CircularProgressIndicator(
+                                color: Colors.white)
+                            : const Text(
+                                'ลงทะเบียน',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                       ),
                     ),
                     TextButton(
@@ -138,7 +206,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         );
                       },
                       child: const Text(
-                        ' เข้าสู่ระบบ',
+                        'เข้าสู่ระบบ',
                         style: TextStyle(
                           color: Colors.green,
                           fontSize: 16,
@@ -153,51 +221,6 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String labelText,
-    IconData? icon,
-    bool obscureText = false,
-    TextInputType keyboardType = TextInputType.text,
-    String? helperText,
-  }) {
-    return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      style: const TextStyle(fontSize: 16),
-      decoration: InputDecoration(
-        labelText: labelText,
-        labelStyle: TextStyle(color: Colors.grey.shade700),
-        prefixIcon: icon != null ? Icon(icon, color: Colors.green) : null,
-        helperText: helperText,
-        helperStyle: const TextStyle(fontSize: 13),
-        filled: true,
-        fillColor: Colors.grey.shade100,
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.green, width: 2),
-        ),
-      ),
-      validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'กรุณากรอก$labelText';
-        }
-        return null;
-      },
     );
   }
 

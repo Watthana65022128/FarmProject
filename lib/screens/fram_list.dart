@@ -3,7 +3,7 @@ import '../models/farm_model.dart';
 import '../services/farm_service.dart';
 
 class FarmListPage extends StatefulWidget {
-  final FarmModel? newFarm; // รับข้อมูลฟาร์มที่สร้างใหม่
+  final FarmModel? newFarm;
 
   const FarmListPage({Key? key, this.newFarm}) : super(key: key);
 
@@ -13,7 +13,7 @@ class FarmListPage extends StatefulWidget {
 
 class _FarmListPageState extends State<FarmListPage> {
   final FarmService _farmService = FarmService();
-  final List<FarmModel> _farms = [];
+  List<FarmModel> _farms = []; // เปลี่ยนเป็น List ธรรมดา ไม่ต้อง final
   bool _isLoading = true;
   String? _error;
 
@@ -30,49 +30,134 @@ class _FarmListPageState extends State<FarmListPage> {
     });
 
     try {
-      if (widget.newFarm != null) {
-        _farms.add(widget.newFarm!);
-      } else {
-        final farms = await _farmService.getFarms();
-        setState(() {
-          _farms.addAll(farms);
-        });
-      }
+      final farms = await _farmService.getFarms();
+      setState(() {
+        _farms = farms; // กำหนดค่าใหม่แทนการใช้ addAll
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() {
         _error = 'เกิดข้อผิดพลาดในการโหลดข้อมูล: ${e.toString()}';
+        _isLoading = false;
       });
-    } finally {
-      setState(() => _isLoading = false);
     }
   }
 
-  Future<void> _deleteFarm(int? id) async {
-    if (id == null) return;
+  Future<void> _deleteFarm(FarmModel farm) async {
+  final confirmed = await _showDeleteConfirmation(farm.name);
+  if (confirmed) {
+    setState(() => _isLoading = true);
+
     try {
-      final success = await _farmService.removeFarm(id);
+      final success = await _farmService.removeFarm(farm.id!);
       if (success) {
-        // ย้าย setState ออกมาจาก block ของการแสดง SnackBar
+        // อัพเดทรายการไร่ทันทีหลังจากลบสำเร็จ
         setState(() {
-          _farms.removeWhere((farm) => farm.id == id);
+          _farms.removeWhere((f) => f.id == farm.id);
+          _isLoading = false; // อัพเดทสถานะหลังลบสำเร็จ
         });
-        // แยก ScaffoldMessenger ออกมา
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('ลบไร่สำเร็จ'), backgroundColor: Colors.green),
-        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('ลบไร่สำเร็จ'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
       } else {
-        _showErrorSnackBar('ไม่สามารถลบไร่ได้');
+        // ลบไม่สำเร็จ
+        setState(() {
+          _isLoading = false;
+        });
+        if (mounted) {
+          _showErrorSnackBar('ลบไร่ไม่สำเร็จ');
+        }
       }
     } catch (e) {
-      _showErrorSnackBar('เกิดข้อผิดพลาดในการลบไร่: ${e.toString()}');
+      // เกิดข้อผิดพลาดในการลบ
+      setState(() {
+        _isLoading = false;
+      });
+      if (mounted) {
+        _showErrorSnackBar('เกิดข้อผิดพลาดในการลบไร่: ${e.toString()}');
+      }
     }
   }
+}
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
+  }
+
+  Future<bool> _showDeleteConfirmation(String farmName) async {
+    bool confirmed = false;
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'ยืนยันการลบ',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.red,
+          ),
+        ),
+        content: Text(
+          'คุณต้องการลบ "$farmName" ใช่หรือไม่?',
+          style: const TextStyle(fontSize: 18),
+        ),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.grey,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'ยกเลิก',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+              const SizedBox(width: 22),
+              ElevatedButton(
+                onPressed: () {
+                  confirmed = true;
+                  Navigator.of(context).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'ยืนยัน',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+    return confirmed;
   }
 
   @override
@@ -91,6 +176,11 @@ class _FarmListPageState extends State<FarmListPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      Image.asset(
+                        'assets/logo.png',
+                        height: 120,
+                      ),
+                      const SizedBox(height: 16),
                       Text(_error!, style: const TextStyle(color: Colors.red)),
                       const SizedBox(height: 16),
                       ElevatedButton(
@@ -101,7 +191,22 @@ class _FarmListPageState extends State<FarmListPage> {
                   ),
                 )
               : _farms.isEmpty
-                  ? const Center(child: Text('ไม่มีรายการไร่'))
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/logo.png',
+                            height: 120,
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'ไม่มีรายการไร่',
+                            style: TextStyle(fontSize: 18),
+                          ),
+                        ],
+                      ),
+                    )
                   : RefreshIndicator(
                       onRefresh: _loadFarms,
                       child: ListView.builder(
@@ -116,23 +221,30 @@ class _FarmListPageState extends State<FarmListPage> {
                                   const EdgeInsets.only(top: 10, bottom: 10),
                               child: Center(
                                 child: ListTile(
-                                  leading: const Icon(Icons.agriculture,
-                                      color: Colors.green),
+                                  leading: const Icon(
+                                    Icons.agriculture,
+                                    color: Colors.green,
+                                    size: 32,
+                                  ),
                                   title: Text(
                                     farm.name.toUpperCase(),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 22,
-                                      color: Colors.green
+                                      color: Colors.green,
                                     ),
                                   ),
                                   subtitle: Text(
                                     'ระยะเวลา: ${farm.startMonth} - ${farm.endMonth}',
+                                    style: const TextStyle(fontSize: 16),
                                   ),
                                   trailing: IconButton(
-                                    icon: const Icon(Icons.delete,
-                                        color: Colors.red),
-                                    onPressed: () => _deleteFarm(farm.id),
+                                    icon: const Icon(
+                                      Icons.delete,
+                                      color: Colors.red,
+                                      size: 28,
+                                    ),
+                                    onPressed: () => _deleteFarm(farm),
                                   ),
                                 ),
                               ),
