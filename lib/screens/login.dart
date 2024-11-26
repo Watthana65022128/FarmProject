@@ -3,6 +3,7 @@ import '../models/user_model.dart';
 import '../auth/auth_service.dart';
 import '../screens/register.dart';
 import '../screens/create_farm.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -47,7 +48,15 @@ class _LoginPageState extends State<LoginPage> {
               backgroundColor: Colors.green,
             ),
           );
-          
+
+          // Get token after successful login
+          final prefs = await SharedPreferences.getInstance();
+          final token = await _authService.getToken();
+
+          if (token != null) {
+            prefs.setString('auth_token', token); // Save token locally
+          }
+
           await Future.delayed(const Duration(seconds: 1));
 
           Navigator.pushReplacement(
@@ -316,11 +325,11 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
- @override
-void dispose() {
-  usernameController.dispose();
-  emailController.dispose();
-  passwordController.dispose();
-  super.dispose();
-}
+  @override
+  void dispose() {
+    usernameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 }

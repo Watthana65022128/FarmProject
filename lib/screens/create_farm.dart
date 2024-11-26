@@ -64,7 +64,7 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(success ? 'บันทึกสำเร็จ' : 'บันทึกล้มเหลว'),
+        content: Text(success ? 'เพิ่มไร่สำเร็จ' : 'ไม่สามารถเพิ่มไร่ได้'),
         backgroundColor: success ? Colors.green : Colors.red,
       ),
     );

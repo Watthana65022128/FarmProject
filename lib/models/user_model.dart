@@ -2,7 +2,7 @@ class User {
   final String username;
   final String email;
   final String? password;
-  final int? age;
+  final String? age;
   final String? address;
 
   User({

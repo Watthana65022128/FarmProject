@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'widgets/bottom_bar.dart';
 import 'screens/register.dart';
 import 'screens/create_farm.dart';
 import 'screens/profile.dart';

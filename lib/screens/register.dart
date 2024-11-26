@@ -54,7 +54,7 @@ class _RegisterPageState extends State<RegisterPage> {
         username: usernameController.text,
         email: emailController.text,
         password: passwordController.text,
-        age: int.parse(ageController.text),
+        age: (ageController.text),
         address: addressController.text,
       );
 

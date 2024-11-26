@@ -13,7 +13,7 @@ class FarmListPage extends StatefulWidget {
 
 class _FarmListPageState extends State<FarmListPage> {
   final FarmService _farmService = FarmService();
-  List<FarmModel> _farms = []; // เปลี่ยนเป็น List ธรรมดา ไม่ต้อง final
+  List<FarmModel> _farms = []; 
   bool _isLoading = true;
   String? _error;
 
@@ -66,12 +66,11 @@ class _FarmListPageState extends State<FarmListPage> {
           );
         }
       } else {
-        // ลบไม่สำเร็จ
         setState(() {
           _isLoading = false;
         });
         if (mounted) {
-          _showErrorSnackBar('ลบไร่ไม่สำเร็จ');
+          _showErrorSnackBar('ลบไร่สำเร็จ');
         }
       }
     } catch (e) {
@@ -88,7 +87,7 @@ class _FarmListPageState extends State<FarmListPage> {
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(content: Text(message), backgroundColor: const Color.fromARGB(255, 4, 202, 53)),
     );
   }
 

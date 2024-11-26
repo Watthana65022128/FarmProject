@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/farm_model.dart';
 
 class FarmService {
-  final String baseUrl = 'http://10.50.10.185:3000/api';
+  final String baseUrl = 'http://10.50.10.84:3000/api';
 
   Future<bool> createFarm(FarmModel farm) async {
     final url = Uri.parse('$baseUrl/farm');
