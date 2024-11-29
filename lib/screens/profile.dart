@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../screens/login.dart';
 import '../auth/auth_service.dart';
 import '../models/user_model.dart';
+import '../screens/profile_edit.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -18,13 +19,13 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _fetchUserProfile();
+    _getUserProfile();
   }
 
-  Future<void> _fetchUserProfile() async {
+  Future<void> _getUserProfile() async {
     try {
-      final userProfile = await _authService.fetchUserProfile();
-      
+      final userProfile = await _authService.getUserProfile();
+
       if (mounted) {
         setState(() {
           _userProfile = userProfile;
@@ -36,7 +37,7 @@ class _ProfilePageState extends State<ProfilePage> {
         setState(() {
           _isLoading = false;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('เกิดข้อผิดพลาดในการดึงข้อมูล: $e'),
@@ -72,6 +73,7 @@ class _ProfilePageState extends State<ProfilePage> {
               ),
               onPressed: () async {
                 Navigator.of(dialogContext).pop();
+
                 await _authService.logout();
 
                 if (mounted) {
@@ -123,118 +125,136 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         ),
         child: SafeArea(
-          child: _isLoading 
-            ? const Center(child: CircularProgressIndicator())
-            : _userProfile == null 
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text('ไม่สามารถโหลดข้อมูลโปรไฟล์ได้'),
-                      ElevatedButton(
-                        onPressed: _fetchUserProfile,
-                        child: const Text('ลองอีกครั้ง'),
-                      )
-                    ],
-                  ),
-                )
-              : SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        Stack(
-                          alignment: Alignment.bottomRight,
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _userProfile == null
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text('ไม่สามารถโหลดข้อมูลโปรไฟล์ได้'),
+                          ElevatedButton(
+                            onPressed: _getUserProfile,
+                            child: const Text('ลองอีกครั้ง'),
+                          )
+                        ],
+                      ),
+                    )
+                  : SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Column(
                           children: [
-                            CircleAvatar(
-                              radius: 60,
-                              backgroundColor: Colors.grey[200],
-                              child: const Icon(
-                                Icons.person,
-                                size: 60,
-                                color: Colors.green,
+                            const SizedBox(height: 20),
+                            Stack(
+                              alignment: Alignment.bottomRight,
+                              children: [
+                                CircleAvatar(
+                                  radius: 60,
+                                  backgroundColor: Colors.grey[200],
+                                  child: const Icon(
+                                    Icons.person,
+                                    size: 60,
+                                    color: Colors.green,
+                                  ),
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.green,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                        color: Colors.white, width: 2),
+                                  ),
+                                  child: IconButton(
+                                    icon: const Icon(Icons.camera_alt,
+                                        color: Colors.white),
+                                    onPressed: () {
+                                      // จัดการการอัพโหลดรูปภาพ
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 32),
+                            // แสดงข้อมูลโปรไฟล์ที่ดึงมาจาก API
+                            _buildProfileItem(
+                              icon: Icons.person,
+                              label: 'ชื่อ',
+                              value: _userProfile?.username ?? 'ไม่มีข้อมูล',
+                            ),
+                            _buildProfileItem(
+                              icon: Icons.email,
+                              label: 'อีเมล',
+                              value: _userProfile?.email ?? 'ไม่มีข้อมูล',
+                            ),
+                            _buildProfileItem(
+                              icon: Icons.cake,
+                              label: 'อายุ',
+                              value: _userProfile?.age != null
+                                  ? '${_userProfile!.age} ปี'
+                                  : 'ไม่มีข้อมูล',
+                            ),
+                            _buildProfileItem(
+                              icon: Icons.home,
+                              label: 'ที่อยู่',
+                              value: _userProfile?.address ?? 'ไม่มีข้อมูล',
+                            ),
+                            const SizedBox(height: 32),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 54,
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  // ใช้ Navigator เพื่อไปยังหน้า ProfileEditPage
+                                  final updatedUser =
+                                      await Navigator.push<User>(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ProfileEditPage(
+                                          userProfile: _userProfile!),
+                                    ),
+                                  );
+
+                                  // ถ้ามีข้อมูลที่อัปเดตกลับมา
+                                  if (updatedUser != null) {
+                                    setState(() {
+                                      _userProfile =
+                                          updatedUser; // อัปเดตข้อมูลผู้ใช้ในหน้า ProfilePage
+                                    });
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                  elevation: 2,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'แก้ไขโปรไฟล์',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ),
-                            Container(
-                              decoration: BoxDecoration(
-                                color: Colors.green,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white, width: 2),
-                              ),
-                              child: IconButton(
-                                icon: const Icon(Icons.camera_alt, color: Colors.white),
-                                onPressed: () {
-                                  // จัดการการอัพโหลดรูปภาพ
-                                },
+                            const SizedBox(height: 24),
+                            TextButton(
+                              onPressed: _showLogoutConfirmationDialog,
+                              child: const Text(
+                                'ออกจากระบบ',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 32),
-                        // แสดงข้อมูลโปรไฟล์ที่ดึงมาจาก API
-                        _buildProfileItem(
-                          icon: Icons.person,
-                          label: 'ชื่อ',
-                          value: _userProfile?.username ?? 'ไม่มีข้อมูล',
-                        ),
-                        _buildProfileItem(
-                          icon: Icons.email,
-                          label: 'อีเมล',
-                          value: _userProfile?.email ?? 'ไม่มีข้อมูล',
-                        ),
-                        _buildProfileItem(
-                          icon: Icons.cake,
-                          label: 'อายุ',
-                          value: _userProfile?.age != null 
-                            ? '${_userProfile!.age} ปี' 
-                            : 'ไม่มีข้อมูล',
-                        ),
-                        _buildProfileItem(
-                          icon: Icons.home,
-                          label: 'ที่อยู่',
-                          value: _userProfile?.address ?? 'ไม่มีข้อมูล',
-                        ),
-                        const SizedBox(height: 32),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 54,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              // เปิดหน้าแก้ไขโปรไฟล์
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text(
-                              'แก้ไขโปรไฟล์',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        TextButton(
-                          onPressed: _showLogoutConfirmationDialog,
-                          child: const Text(
-                            'ออกจากระบบ',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
         ),
       ),
     );

@@ -65,7 +65,7 @@ class AuthService {
   }
 
   // ฟังก์ชันดึงข้อมูลโปรไฟล์
-  Future<User?> fetchUserProfile() async {
+  Future<User?> getUserProfile() async {
     // ดึง token จาก SharedPreferences
     final token = await getToken();
     
@@ -74,7 +74,7 @@ class AuthService {
       return null;
     }
 
-    final url = Uri.parse('$baseUrl/profile');
+    final url = Uri.parse('$baseUrl/user/profile');
     try {
       final response = await http.get(
         url,
@@ -88,7 +88,8 @@ class AuthService {
         // แปลงข้อมูลที่ได้รับเป็น User object
         final data = jsonDecode(response.body);
         print('ดึงข้อมูลโปรไฟล์สำเร็จ: $data');
-        return User.fromJson(data);
+        final userData = data['user'] ?? data;
+        return User.fromJson(userData);
       } else {
         print('เกิดข้อผิดพลาดในการดึงข้อมูลโปรไฟล์: ${response.body}');
         return null;
@@ -98,6 +99,45 @@ class AuthService {
       return null;
     }
   }
+
+  // Add this method to the AuthService class
+Future<User?> updateUserProfile(User updatedUser) async {
+  // ดึง token จาก SharedPreferences
+  final token = await getToken();
+
+  if (token == null) {
+    print('No token found. Please log in.');
+    return null;
+  }
+
+  final url = Uri.parse('$baseUrl/user/profile');
+  try {
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token'
+      },
+      body: jsonEncode(updatedUser.toJson()),
+    );
+
+    if (response.statusCode == 200) {
+      // แปลงข้อมูลที่ได้รับเป็น User object
+      final data = jsonDecode(response.body);
+      print('อัพเดทโปรไฟล์สำเร็จ: $data');
+      
+      // ตรวจสอบว่ามี key 'user' หรือไม่
+      final userData = data['user'] ?? data;
+      return User.fromJson(userData);
+    } else {
+      print('เกิดข้อผิดพลาดในการอัพเดทโปรไฟล์: ${response.body}');
+      return null;
+    }
+  } catch (e) {
+    print('Error: $e');
+    return null;
+  }
+}
 
   // ฟังก์ชันเก็บ token ใน SharedPreferences
   Future<void> _saveToken(String token) async {

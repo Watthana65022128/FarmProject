@@ -13,7 +13,7 @@ class FarmListPage extends StatefulWidget {
 
 class _FarmListPageState extends State<FarmListPage> {
   final FarmService _farmService = FarmService();
-  List<FarmModel> _farms = []; 
+  List<FarmModel> _farms = [];
   bool _isLoading = true;
   String? _error;
 
@@ -44,50 +44,52 @@ class _FarmListPageState extends State<FarmListPage> {
   }
 
   Future<void> _deleteFarm(FarmModel farm) async {
-  final confirmed = await _showDeleteConfirmation(farm.name);
-  if (confirmed) {
-    setState(() => _isLoading = true);
+    final confirmed = await _showDeleteConfirmation(farm.name);
+    if (confirmed) {
+      setState(() => _isLoading = true);
 
-    try {
-      final success = await _farmService.removeFarm(farm.id!);
-      if (success) {
-        // อัพเดทรายการไร่ทันทีหลังจากลบสำเร็จ
-        setState(() {
-          _farms.removeWhere((f) => f.id == farm.id);
-          _isLoading = false; // อัพเดทสถานะหลังลบสำเร็จ
-        });
+      try {
+        final success = await _farmService.removeFarm(farm.id!);
+        if (success) {
+          // อัพเดทรายการไร่ทันทีหลังจากลบสำเร็จ
+          setState(() {
+            _farms.removeWhere((f) => f.id == farm.id);
+            _isLoading = false; // อัพเดทสถานะหลังลบสำเร็จ
+          });
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('ลบไร่สำเร็จ'),
-              backgroundColor: Colors.green,
-            ),
-          );
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('ลบไร่สำเร็จ'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
+          if (mounted) {
+            _showErrorSnackBar('ลบไร่สำเร็จ');
+          }
         }
-      } else {
+      } catch (e) {
+        // เกิดข้อผิดพลาดในการลบ
         setState(() {
           _isLoading = false;
         });
         if (mounted) {
-          _showErrorSnackBar('ลบไร่สำเร็จ');
+          _showErrorSnackBar('เกิดข้อผิดพลาดในการลบไร่: ${e.toString()}');
         }
-      }
-    } catch (e) {
-      // เกิดข้อผิดพลาดในการลบ
-      setState(() {
-        _isLoading = false;
-      });
-      if (mounted) {
-        _showErrorSnackBar('เกิดข้อผิดพลาดในการลบไร่: ${e.toString()}');
       }
     }
   }
-}
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: const Color.fromARGB(255, 4, 202, 53)),
+      SnackBar(
+          content: Text(message),
+          backgroundColor: const Color.fromARGB(255, 4, 202, 53)),
     );
   }
 
@@ -252,6 +254,31 @@ class _FarmListPageState extends State<FarmListPage> {
                         },
                       ),
                     ),
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.green[50],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton.icon(
+                onPressed: () {
+                  // Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(
+                  //       builder: (context) => const FarmListPage()),
+                  // );
+                },
+                icon: const Icon(Icons.monetization_on),
+                label: const Text('ค่าใช้จ่ายรวม'),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.green,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
