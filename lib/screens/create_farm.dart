@@ -3,6 +3,7 @@ import '../models/farm_model.dart';
 import '../services/farm_service.dart';
 import 'profile.dart';
 import '../screens/fram_list.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CreateFarmPage extends StatefulWidget {
   const CreateFarmPage({super.key});
@@ -10,6 +11,7 @@ class CreateFarmPage extends StatefulWidget {
   @override
   _CreateFarmPageState createState() => _CreateFarmPageState();
 }
+
 
 class _CreateFarmPageState extends State<CreateFarmPage> {
   final TextEditingController _nameController = TextEditingController();
@@ -50,7 +52,7 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
       );
       return;
     }
-    
+
     setState(() => _isLoading = true);
 
     final farm = FarmModel(
@@ -59,7 +61,10 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
       endMonth: _endMonth!,
     );
 
-    final success = await _farmService.createFarm(farm);
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('jwt_token');
+
+    final success = await _farmService.createFarm(farm, token);
     setState(() => _isLoading = false);
 
     ScaffoldMessenger.of(context).showSnackBar(
