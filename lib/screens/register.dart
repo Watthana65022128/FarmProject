@@ -8,7 +8,7 @@ class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
   @override
-  _RegisterPageState createState() => _RegisterPageState();
+  State<RegisterPage> createState() => _RegisterPageState();
 }
 
 class _RegisterPageState extends State<RegisterPage> {
@@ -18,24 +18,54 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
   final TextEditingController ageController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
 
   bool _isLoading = false;
 
-  Future<void> _handleRegister() async {
+  String? _validatePassword(String password) {
+    if (password.isEmpty) {
+      return 'กรุณากรอกรหัสผ่าน';
+    }
+    
+    if (password.length < 6) {
+      return 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
+    }
 
-    if (passwordController.text.length < 6) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    return;
+    if (!password.contains(RegExp(r'[a-z]'))) {
+      return 'รหัสผ่านต้องมีตัวพิมพ์เล็กอย่างน้อย 1 ตัว';
+    }
+
+    if (!password.contains(RegExp(r'[A-Z]'))) {
+      return 'รหัสผ่านต้องมีตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว';
+    }
+
+    if (!password.contains(RegExp(r'[0-9]'))) {
+      return 'รหัสผ่านต้องมีตัวเลขอย่างน้อย 1 ตัว';
+    }
+
+    if (!password.contains(RegExp(r'[@$!%*?&_-]'))) {
+      return 'รหัสผ่านต้องมีอักขระพิเศษ อย่างน้อย 1 ตัว';
+    }
+
+    return null;
   }
+
+  Future<void> _handleRegister() async {
+    // ตรวจสอบรหัสผ่าน
+    String? passwordError = _validatePassword(passwordController.text);
+    if (passwordError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(passwordError),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // ตรวจสอบรหัสผ่านยืนยัน
     if (passwordController.text != confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -45,6 +75,7 @@ class _RegisterPageState extends State<RegisterPage> {
       );
       return;
     }
+
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -54,7 +85,7 @@ class _RegisterPageState extends State<RegisterPage> {
         username: usernameController.text,
         email: emailController.text,
         password: passwordController.text,
-        age: (ageController.text),
+        age: ageController.text,
         address: addressController.text,
       );
 
@@ -82,8 +113,7 @@ class _RegisterPageState extends State<RegisterPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content:
-                  Text('อีเมลนี้ถูกใช้งานแล้ว'),
+              content: Text('อีเมลนี้ถูกใช้งานแล้ว'),
               backgroundColor: Colors.red,
             ),
           );

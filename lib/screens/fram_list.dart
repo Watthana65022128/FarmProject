@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/farm_model.dart';
 import '../services/farm_service.dart';
+import './farm_info.dart';
 
 class FarmListPage extends StatefulWidget {
   final FarmModel? newFarm;
@@ -8,6 +9,7 @@ class FarmListPage extends StatefulWidget {
   const FarmListPage({Key? key, this.newFarm}) : super(key: key);
 
   @override
+  
   _FarmListPageState createState() => _FarmListPageState();
 }
 
@@ -247,6 +249,15 @@ class _FarmListPageState extends State<FarmListPage> {
                                     ),
                                     onPressed: () => _deleteFarm(farm),
                                   ),
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => FarmInfoPage(
+                                            farm: farm), // ส่งข้อมูลไร่ไปด้วย
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             ),

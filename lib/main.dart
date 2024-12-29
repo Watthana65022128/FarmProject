@@ -3,6 +3,8 @@ import 'screens/register.dart';
 import 'screens/create_farm.dart';
 import 'screens/profile.dart';
 import 'screens/login.dart';
+import 'screens/farm_info.dart';
+import './screens/scan.dart';
 
 void main() {
   runApp(MyApp());

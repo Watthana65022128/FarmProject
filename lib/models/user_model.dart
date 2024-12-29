@@ -19,7 +19,7 @@ class User {
     username: json['username'] ?? '',
     email: json['email'] ?? '',
     password: json['password'],
-    age: json['age'], // คงเป็น String เหมือนเดิม
+    age: json['age'],
     address: json['address'],
   );
 }

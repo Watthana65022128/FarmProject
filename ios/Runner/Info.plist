@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSCameraUsageDescription</key>
+    <string>ต้องการใช้กล้องเพื่อถ่ายภาพบิลเงินสด</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>ต้องการเข้าถึงแกลเลอรี่เพื่อเลือกภาพบิลเงินสด</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
