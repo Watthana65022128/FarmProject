@@ -19,36 +19,48 @@ class _CustomNavigationBarState extends State<CustomNavigationBar> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        SizedBox(
-          height: 80,
-          child: BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
-            items: const <BottomNavigationBarItem>[
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                label: 'ภาพรวม',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.list_alt_sharp),
-                label: 'รายการ',
-              ),
-              BottomNavigationBarItem(
-                icon: SizedBox(width: 50),
-                label: '',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.notifications),
-                label: 'แจ้งเตือน',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.wallet),
-                label: 'งบประมาณ',
-              ),
-            ],
-            currentIndex: widget.selectedIndex,
-            selectedItemColor: Colors.green,
-            unselectedItemColor: Colors.grey,
-            onTap: widget.onItemTapped,
+        Container(
+          color: Colors.white,
+          child: SizedBox(
+            height: 80,
+            child: BottomNavigationBar(
+              type: BottomNavigationBarType.fixed,
+              backgroundColor: Colors.white,
+              selectedFontSize: 12,
+              unselectedFontSize: 12,
+              items: const <BottomNavigationBarItem>[
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  activeIcon: Icon(Icons.home),
+                  label: 'ภาพรวม',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.list_alt_outlined),
+                  activeIcon: Icon(Icons.list_alt),
+                  label: 'รายการ',
+                ),
+                BottomNavigationBarItem(
+                  icon: SizedBox(width: 50),
+                  label: '',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.notifications_outlined),
+                  activeIcon: Icon(Icons.notifications),
+                  label: 'แจ้งเตือน',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.account_balance_wallet_outlined),
+                  activeIcon: Icon(Icons.account_balance_wallet),
+                  label: 'งบประมาณ',
+                ),
+              ],
+              currentIndex: widget.selectedIndex,  // ใช้ index ที่ส่งมาโดยตรง
+              selectedItemColor: Colors.green,
+              unselectedItemColor: Colors.grey,
+              onTap: widget.onItemTapped,
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
+            ),
           ),
         ),
         Positioned(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/farm_model.dart';
 import '../widgets/custom_navigation_bar.dart';
 import 'scan.dart';
+import '../screens/overview_home.dart';
 
 class FarmInfoPage extends StatefulWidget {
   final FarmModel farm;
@@ -15,7 +16,6 @@ class FarmInfoPage extends StatefulWidget {
   State<FarmInfoPage> createState() => _FarmInfoPageState();
 }
 
-// ใน _FarmInfoPageState
 class _FarmInfoPageState extends State<FarmInfoPage> {
   int _selectedIndex = 0;
 
@@ -25,7 +25,7 @@ class _FarmInfoPageState extends State<FarmInfoPage> {
         context,
         MaterialPageRoute(
           builder: (context) => const ScanPage(),
-          fullscreenDialog: true, // เพิ่มการแสดงผลแบบ fullscreen
+          fullscreenDialog: true,
         ),
       );
     } catch (e) {
@@ -37,8 +37,22 @@ class _FarmInfoPageState extends State<FarmInfoPage> {
     }
   }
 
+  void _onItemTapped(int index) {
+    if (index == 2) {
+      _navigateToScan();
+    } else {
+      setState(() {
+        // ปรับการคำนวณ index ใหม่
+        _selectedIndex = index > 2 ? index - 1 : index;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // คำนวณ currentIndex สำหรับ CustomNavigationBar
+    final navigationIndex = _selectedIndex >= 2 ? _selectedIndex + 1 : _selectedIndex;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.farm.name),
@@ -49,23 +63,15 @@ class _FarmInfoPageState extends State<FarmInfoPage> {
       body: IndexedStack(
         index: _selectedIndex,
         children: const [
-          Center(child: Text('หน้าภาพรวม')), // index 0
-          Center(child: Text('หน้ารายการ')), // index 1
-          Center(child: Text('หน้าแจ้งเตือน')), // index 2 (เดิมเป็น 3)
-          Center(child: Text('หน้างบประมาณ')), // index 3 (เดิมเป็น 4)
+          OverviewPage(),
+          Center(child: Text('หน้ารายการ')),
+          Center(child: Text('หน้าแจ้งเตือน')),
+          Center(child: Text('หน้างบประมาณ')),
         ],
       ),
       bottomNavigationBar: CustomNavigationBar(
-        selectedIndex: _selectedIndex,
-        onItemTapped: (index) {
-          if (index == 2) {
-            _navigateToScan();
-          } else {
-            setState(() {
-              _selectedIndex = index > 2 ? index - 1 : index;
-            });
-          }
-        },
+        selectedIndex: navigationIndex,
+        onItemTapped: _onItemTapped,
       ),
     );
   }

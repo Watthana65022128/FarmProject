@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/farm_model.dart';
 import '../services/farm_service.dart';
 import 'profile.dart';
-import '../screens/fram_list.dart';
+import 'farm_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class CreateFarmPage extends StatefulWidget {
