@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://192.168.1.156:3000/api';
+  static const String baseUrl = 'http://192.168.180.38:3000/api';
 
   // ฟังก์ชันสำหรับการลงทะเบียน
   Future<bool> register(User user) async {

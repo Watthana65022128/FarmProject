@@ -22,15 +22,19 @@ class ManagementExpensePage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 OverviewCard(
-                  title: 'ค่าแรง',
-                  icon: Icons.attach_money, // เปลี่ยนไอคอนให้สอดคล้อง
+                  title: 'ค่าอุปกรณ์',
+                  icon: Icons.build, // ปรับไอคอนให้ตรงกับ title
                 ),
-                SizedBox(height: 30),
+                SizedBox(height: 20),
+                OverviewCard(
+                  title: 'ค่าแรง',
+                  icon: Icons.work, // ปรับไอคอนให้ตรงกับ title
+                ),
+                SizedBox(height: 20),
                 OverviewCard(
                   title: 'ค่าขนส่ง',
-                  icon: Icons.local_shipping, // เปลี่ยนไอคอนให้สอดคล้อง
+                  icon: Icons.local_shipping, // ปรับไอคอนให้ตรงกับ title
                 ),
-                SizedBox(height: 24),
               ],
             ),
           ),

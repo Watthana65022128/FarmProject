@@ -4,7 +4,7 @@ import '../models/farm_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FarmService {
-  final String baseUrl = 'http://192.168.1.156:3000/api';
+  final String baseUrl = 'http://192.168.180.38:3000/api';
 
   Future<bool> createFarm(FarmModel farm, [String? providedToken]) async {
     final url = Uri.parse('$baseUrl/farm');

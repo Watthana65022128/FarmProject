@@ -265,31 +265,6 @@ class _FarmListPageState extends State<FarmListPage> {
                         },
                       ),
                     ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.green[50],
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextButton.icon(
-                onPressed: () {
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //       builder: (context) => const FarmListPage()),
-                  // );
-                },
-                icon: const Icon(Icons.monetization_on),
-                label: const Text('ค่าใช้จ่ายรวม'),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.green,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

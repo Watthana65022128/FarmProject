@@ -26,27 +26,7 @@ class _ScanPageState extends State<ScanPage> {
 
     if (statuses[Permission.camera]!.isDenied ||
         statuses[Permission.storage]!.isDenied) {
-      // แสดงข้อความแจ้งเตือนให้ผู้ใช้เปิดสิทธิ์การเข้าถึง
-      if (context.mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('ต้องการสิทธิ์การเข้าถึง'),
-            content:
-                const Text('กรุณาอนุญาตสิทธิ์การเข้าถึงกล้องและพื้นที่จัดเก็บ'),
-            actions: [
-              TextButton(
-                onPressed: () => openAppSettings(),
-                child: const Text('ตั้งค่า'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('ยกเลิก'),
-              ),
-            ],
-          ),
-        );
-      }
+      // ลบการแสดงข้อความแจ้งเตือนให้ผู้ใช้เปิดสิทธิ์การเข้าถึง
     }
   }
 

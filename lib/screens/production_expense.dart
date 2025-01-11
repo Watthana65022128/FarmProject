@@ -25,12 +25,26 @@ class ProductionExpensePage extends StatelessWidget {
                   title: 'ค่าเมล็ดพันธุ์พืช',
                   icon: Icons.grass, // เปลี่ยนไอคอนให้สอดคล้อง
                 ),
-                SizedBox(height: 30),
+                SizedBox(height: 20),
+                OverviewCard(
+                  title: 'ค่าสารเคมี',
+                  icon: Icons.science, // เปลี่ยนไอคอนให้สอดคล้อง
+                ),
+                SizedBox(height: 20),
+                OverviewCard(
+                  title: 'ค่าน้ำ',
+                  icon: Icons.water, // เปลี่ยนไอคอนให้สอดคล้อง
+                ),
+                SizedBox(height: 20),
+                OverviewCard(
+                  title: 'ค่าไฟ',
+                  icon: Icons.electric_bolt, // เปลี่ยนไอคอนให้สอดคล้อง
+                ),
+                SizedBox(height: 20),
                 OverviewCard(
                   title: 'ค่าปุ๋ย',
                   icon: Icons.agriculture, // เปลี่ยนไอคอนให้สอดคล้อง
                 ),
-                SizedBox(height: 24),
               ],
             ),
           ),
