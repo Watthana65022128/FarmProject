@@ -9,7 +9,6 @@ class FarmListPage extends StatefulWidget {
   const FarmListPage({Key? key, this.newFarm}) : super(key: key);
 
   @override
-  
   _FarmListPageState createState() => _FarmListPageState();
 }
 
@@ -33,15 +32,19 @@ class _FarmListPageState extends State<FarmListPage> {
 
     try {
       final farms = await _farmService.getFarms();
-      setState(() {
-        _farms = farms; // กำหนดค่าใหม่แทนการใช้ addAll
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _farms = farms;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _error = 'เกิดข้อผิดพลาดในการโหลดข้อมูล: ${e.toString()}';
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _error = 'เกิดข้อผิดพลาดในการโหลดข้อมูล: ${e.toString()}';
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -216,55 +219,69 @@ class _FarmListPageState extends State<FarmListPage> {
                         itemCount: _farms.length,
                         padding: const EdgeInsets.all(16),
                         itemBuilder: (context, index) {
-                          final farm = _farms[index];
-                          return SizedBox(
-                            height: 120,
-                            child: Card(
-                              margin:
-                                  const EdgeInsets.only(top: 10, bottom: 10),
-                              child: Center(
-                                child: ListTile(
-                                  leading: const Icon(
-                                    Icons.agriculture,
-                                    color: Colors.green,
-                                    size: 32,
-                                  ),
-                                  title: Text(
-                                    farm.name.toUpperCase(),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 22,
-                                      color: Colors.green,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    'ระยะเวลา: ${farm.startMonth} - ${farm.endMonth}',
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  trailing: IconButton(
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      color: Colors.red,
-                                      size: 28,
-                                    ),
-                                    onPressed: () => _deleteFarm(farm),
-                                  ),
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => FarmInfoPage(
-                                            farm: farm), // ส่งข้อมูลไร่ไปด้วย
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          );
+                          return _buildFarmCard(_farms[index]);
                         },
                       ),
                     ),
+    );
+  }
+
+  Widget _buildFarmCard(FarmModel farm) {
+    return SizedBox(
+      height: 120,
+      child: Card(
+        margin: const EdgeInsets.only(top: 10, bottom: 10),
+        child: Center(
+          child: ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            leading: Container(
+              padding: const EdgeInsets.only(top: 5),
+              child: const Icon(
+                Icons.agriculture,
+                color: Colors.green,
+                size: 32,
+              ),
+            ),
+            title: Text(
+              farm.name.toUpperCase(),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 22,
+                color: Colors.green,
+              ),
+            ),
+            subtitle: Container(
+              padding: const EdgeInsets.only(top: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'ระยะเวลา: ${farm.startMonth} - ${farm.endMonth}',
+                    style: const TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+            trailing: IconButton(
+              icon: const Icon(
+                Icons.delete,
+                color: Colors.red,
+                size: 28,
+              ),
+              onPressed: () => _deleteFarm(farm),
+            ),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => FarmInfoPage(farm: farm),
+                ),
+              ).then((_) => _loadFarms());
+            },
+          ),
+        ),
+      ),
     );
   }
 }

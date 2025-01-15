@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 
 class AuthService {
-  static const String baseUrl = 'http://192.168.180.38:3000/api';
+  static const String baseUrl = 'http://192.168.1.171:3000/api';
 
   // ฟังก์ชันสำหรับการลงทะเบียน
   Future<bool> register(User user) async {
@@ -15,7 +15,7 @@ class AuthService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(user.toJson()),
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         print('ลงทะเบียนสำเร็จ: ${response.body}');
         return true;
@@ -29,7 +29,6 @@ class AuthService {
     }
   }
 
-  // ฟังก์ชันสำหรับการเข้าสู่ระบบ
   Future<bool> login(User user) async {
     final url = Uri.parse('$baseUrl/login');
     try {
@@ -41,18 +40,23 @@ class AuthService {
           'password': user.password,
         }),
       );
-      
+
       if (response.statusCode == 200) {
         // หากเข้าสู่ระบบสำเร็จ
         print('เข้าสู่ระบบสำเร็จ: ${response.body}');
-        
+
         // ดึง token จาก response body
         final data = jsonDecode(response.body);
         final token = data['token'];
-        
+        print('Token before save: $token'); // เช็ค token ก่อนบันทึก
+
         // เก็บ token ลงใน SharedPreferences
         await _saveToken(token);
-        
+
+        // เช็คว่าบันทึกสำเร็จไหม
+        final savedToken = await getToken();
+        print('Token after save: $savedToken');
+
         return true;
       } else {
         print('เกิดข้อผิดพลาดในการเข้าสู่ระบบ: ${response.body}');
@@ -66,9 +70,8 @@ class AuthService {
 
   // ฟังก์ชันดึงข้อมูลโปรไฟล์
   Future<User?> getUserProfile() async {
-    // ดึง token จาก SharedPreferences
     final token = await getToken();
-    
+
     if (token == null) {
       print('No token found. Please log in.');
       return null;
@@ -101,43 +104,43 @@ class AuthService {
   }
 
   // Add this method to the AuthService class
-Future<User?> updateUserProfile(User updatedUser) async {
-  // ดึง token จาก SharedPreferences
-  final token = await getToken();
+  Future<User?> updateUserProfile(User updatedUser) async {
+    // ดึง token จาก SharedPreferences
+    final token = await getToken();
 
-  if (token == null) {
-    print('No token found. Please log in.');
-    return null;
-  }
-
-  final url = Uri.parse('$baseUrl/user/profile');
-  try {
-    final response = await http.put(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $token'
-      },
-      body: jsonEncode(updatedUser.toJson()),
-    );
-
-    if (response.statusCode == 200) {
-      // แปลงข้อมูลที่ได้รับเป็น User object
-      final data = jsonDecode(response.body);
-      print('อัพเดทโปรไฟล์สำเร็จ: $data');
-      
-      // ตรวจสอบว่ามี key 'user' หรือไม่
-      final userData = data['user'] ?? data;
-      return User.fromJson(userData);
-    } else {
-      print('เกิดข้อผิดพลาดในการอัพเดทโปรไฟล์: ${response.body}');
+    if (token == null) {
+      print('No token found. Please log in.');
       return null;
     }
-  } catch (e) {
-    print('Error: $e');
-    return null;
+
+    final url = Uri.parse('$baseUrl/user/profile');
+    try {
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token'
+        },
+        body: jsonEncode(updatedUser.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        // แปลงข้อมูลที่ได้รับเป็น User object
+        final data = jsonDecode(response.body);
+        print('อัพเดทโปรไฟล์สำเร็จ: $data');
+
+        // ตรวจสอบว่ามี key 'user' หรือไม่
+        final userData = data['user'] ?? data;
+        return User.fromJson(userData);
+      } else {
+        print('เกิดข้อผิดพลาดในการอัพเดทโปรไฟล์: ${response.body}');
+        return null;
+      }
+    } catch (e) {
+      print('Error: $e');
+      return null;
+    }
   }
-}
 
   // ฟังก์ชันเก็บ token ใน SharedPreferences
   Future<void> _saveToken(String token) async {
@@ -155,5 +158,12 @@ Future<User?> updateUserProfile(User updatedUser) async {
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt_token');
+  }
+
+  // เพิ่มฟังก์ชันเช็ค token
+  Future<bool> isValidToken() async {
+    final token = await getToken();
+    print('Checking token: $token');
+    return token != null && token.isNotEmpty;
   }
 }

@@ -2,10 +2,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import '../services/receipt_service.dart';
+import '../models/receipt_model.dart';
+import 'edit_receipt.dart';
+import '../auth/auth_service.dart';
 
 class ScanPage extends StatefulWidget {
-  const ScanPage({super.key});
+  final int farmId;
+  const ScanPage({super.key, required this.farmId});
 
   @override
   State<ScanPage> createState() => _ScanPageState();
@@ -14,9 +18,9 @@ class ScanPage extends StatefulWidget {
 class _ScanPageState extends State<ScanPage> {
   File? _image;
   final ImagePicker _picker = ImagePicker();
-  final TextRecognizer _textRecognizer = TextRecognizer();
-  String _extractedText = '';
   bool _isProcessing = false;
+  final ReceiptService _receiptService = ReceiptService();
+  final AuthService _authService = AuthService();
 
   Future<void> _checkPermissions() async {
     Map<Permission, PermissionStatus> statuses = await [
@@ -26,7 +30,28 @@ class _ScanPageState extends State<ScanPage> {
 
     if (statuses[Permission.camera]!.isDenied ||
         statuses[Permission.storage]!.isDenied) {
-      // ลบการแสดงข้อความแจ้งเตือนให้ผู้ใช้เปิดสิทธิ์การเข้าถึง
+      // Handle permission denied
+    }
+  }
+
+  Future<void> _initializeService() async {
+    // ดึง token จาก AuthService และตั้งค่าให้ ReceiptService
+    final token = await _authService.getToken();
+    print('Token in ScanPage: $token');
+    if (token != null) {
+      _receiptService.setToken(token);
+      print('Token set in ReceiptService');
+    } else {
+      // จัดการกรณีไม่มี token
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('กรุณาเข้าสู่ระบบใหม่'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        Navigator.pop(context); // กลับไปหน้าก่อนหน้า
+      }
     }
   }
 
@@ -42,12 +67,10 @@ class _ScanPageState extends State<ScanPage> {
       if (image != null) {
         setState(() {
           _image = File(image.path);
-          _extractedText = '';
           _isProcessing = true;
         });
 
-        // ทำ OCR
-        await _processImage();
+        await _scanReceipt();
       }
     } catch (e) {
       if (context.mounted) {
@@ -58,42 +81,70 @@ class _ScanPageState extends State<ScanPage> {
     }
   }
 
-  Future<void> _processImage() async {
-    if (_image == null) return;
+  Future<void> _scanReceipt() async {
+   if (_image == null) return;
 
-    try {
-      final inputImage = InputImage.fromFile(_image!);
-      final RecognizedText recognizedText =
-          await _textRecognizer.processImage(inputImage);
+   try {
+       // เช็ค token ก่อนส่งรูป
+       final token = await _authService.getToken();
+       print('Token before scan: $token');  // ดู token ที่ได้
 
-      setState(() {
-        _extractedText = recognizedText.text;
-        _isProcessing = false;
-      });
-    } catch (e) {
-      setState(() {
-        _extractedText = 'เกิดข้อผิดพลาดในการประมวลผล: $e';
-        _isProcessing = false;
-      });
-    }
-  }
+       if (token == null || token.isEmpty) {
+           throw Exception('กรุณาเข้าสู่ระบบใหม่');
+       }
 
-  @override
-  void dispose() {
-    _textRecognizer.close();
-    super.dispose();
-  }
+       // ตั้งค่า token ให้ ReceiptService
+       _receiptService.setToken(token);
+
+       final result = await _receiptService.scanReceipt(
+           _image!,
+           widget.farmId,
+       );
+
+       setState(() {
+           _isProcessing = false;
+       });
+
+       if (context.mounted) {
+           // ไปหน้าแก้ไขพร้อมส่งข้อมูลที่ได้จาก OCR
+           final Receipt? updatedReceipt = await Navigator.push(
+               context,
+               MaterialPageRoute(
+                   builder: (context) => EditReceiptPage(
+                       receipt: result['receipt'] as Receipt,
+                       imagePath: result['imagePath'] as String,
+                       farmId: widget.farmId,
+                   ),
+               ),
+           );
+
+           // ถ้าบันทึกสำเร็จ กลับไปหน้าก่อนหน้าพร้อมส่งข้อมูลใบเสร็จกลับไป
+           if (updatedReceipt != null && context.mounted) {
+               Navigator.pop(context, updatedReceipt);
+           }
+       }
+   } catch (e) {
+       setState(() {
+           _isProcessing = false;
+       });
+       if (context.mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+               SnackBar(
+                   content: Text(e.toString()),
+                   backgroundColor: Colors.red,
+               ),
+           );
+       }
+   }
+}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // ใส่ AppBar เพื่อความสวยงาม
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context); // ย้อนกลับไปหน้าก่อนหน้า
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: const Text('สแกนบิล'),
         centerTitle: true,
@@ -102,19 +153,17 @@ class _ScanPageState extends State<ScanPage> {
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment:
-              MainAxisAlignment.center, // จัดให้อยู่ตรงกลางแนวตั้ง
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (_image != null) ...[
               Image.file(
                 _image!,
-                height: 300,
-                width: 300, // กำหนดความกว้างคงที่
+                height: 600,
+                width: 400,
                 fit: BoxFit.cover,
               ),
               const SizedBox(height: 20),
             ],
-            // ถ้าไม่มีรูป แสดงไอคอนกล้อง
             if (_image == null)
               const Icon(
                 Icons.camera_alt,
@@ -123,11 +172,12 @@ class _ScanPageState extends State<ScanPage> {
               ),
             const SizedBox(height: 20),
             Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.center, // จัดปุ่มให้อยู่ตรงกลาง
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton.icon(
-                  onPressed: () => _getImage(ImageSource.camera),
+                  onPressed: _isProcessing
+                      ? null
+                      : () => _getImage(ImageSource.camera),
                   icon: const Icon(Icons.camera_alt),
                   label: const Text('ถ่ายภาพ'),
                   style: ElevatedButton.styleFrom(
@@ -139,7 +189,9 @@ class _ScanPageState extends State<ScanPage> {
                 ),
                 const SizedBox(width: 20),
                 ElevatedButton.icon(
-                  onPressed: () => _getImage(ImageSource.gallery),
+                  onPressed: _isProcessing
+                      ? null
+                      : () => _getImage(ImageSource.gallery),
                   icon: const Icon(Icons.photo_library),
                   label: const Text('เลือกจากแกลเลอรี่'),
                   style: ElevatedButton.styleFrom(
@@ -155,43 +207,6 @@ class _ScanPageState extends State<ScanPage> {
             if (_isProcessing)
               const CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-              )
-            else if (_extractedText.isNotEmpty)
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16.0),
-                        decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'ข้อความที่สกัดได้:',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              _extractedText,
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
               ),
           ],
         ),

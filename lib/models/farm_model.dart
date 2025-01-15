@@ -3,12 +3,14 @@ class FarmModel {
   final String name;
   final String startMonth;
   final String endMonth;
+  final double? budget;
 
   FarmModel({
     this.id,
     required this.name,
     required this.startMonth,
     required this.endMonth,
+    this.budget,
   });
 
   // แปลงจาก JSON เป็น Model
@@ -18,6 +20,7 @@ class FarmModel {
       name: json['name'] ?? '',
       startMonth: json['startMonth'] ?? '',
       endMonth: json['endMonth'] ?? '',
+      budget: json['budget'] != null ? double.tryParse(json['budget'].toString()) : null,
     );
   }
 
@@ -28,13 +31,14 @@ class FarmModel {
       'name': name,
       'startMonth': startMonth,
       'endMonth': endMonth,
+      'budget': budget,
     };
   }
 
-  // แปลงจาก Map เป็น Model (alias ของ fromJson เพื่อความเข้ากันได้กับโค้ดเดิม)
+  // แปลงจาก Map เป็น Model (alias ของ fromJson)
   factory FarmModel.fromMap(Map<String, dynamic> map) => FarmModel.fromJson(map);
 
-  // แปลงจาก Model เป็น Map (alias ของ toJson เพื่อความเข้ากันได้กับโค้ดเดิม)
+  // แปลงจาก Model เป็น Map (alias ของ toJson)
   Map<String, dynamic> toMap() => toJson();
 
   // สร้าง copy ของ Model พร้อมอัพเดทข้อมูลบางส่วน
@@ -43,17 +47,19 @@ class FarmModel {
     String? name,
     String? startMonth,
     String? endMonth,
+    double? budget,
   }) {
     return FarmModel(
       id: id ?? this.id,
       name: name ?? this.name,
       startMonth: startMonth ?? this.startMonth,
       endMonth: endMonth ?? this.endMonth,
+      budget: budget ?? this.budget,
     );
   }
 
   @override
   String toString() {
-    return 'FarmModel(id: $id, name: $name, startMonth: $startMonth, endMonth: $endMonth)';
+    return 'FarmModel(id: $id, name: $name, startMonth: $startMonth, endMonth: $endMonth, budget: $budget)';
   }
 }

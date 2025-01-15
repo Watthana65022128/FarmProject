@@ -3,6 +3,7 @@ import '../models/farm_model.dart';
 import '../widgets/custom_navigation_bar.dart';
 import 'scan.dart';
 import '../screens/overview_home.dart';
+import '../models/receipt_model.dart';
 
 class FarmInfoPage extends StatefulWidget {
   final FarmModel farm;
@@ -20,18 +21,48 @@ class _FarmInfoPageState extends State<FarmInfoPage> {
   int _selectedIndex = 0;
 
   void _navigateToScan() async {
+    // เช็คว่ามี farmId ก่อน
+    if (widget.farm.id == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ไม่พบข้อมูลฟาร์ม'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
     try {
-      await Navigator.push(
+      final Receipt? newReceipt = await Navigator.push<Receipt>(
         context,
         MaterialPageRoute(
-          builder: (context) => const ScanPage(),
+          builder: (context) => ScanPage(
+              farmId: widget.farm.id!), // ใช้ ! เพราะเช็คแล้วว่าไม่เป็น null
           fullscreenDialog: true,
         ),
       );
+
+      if (mounted && newReceipt != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('บันทึกใบเสร็จสำเร็จ'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        setState(() {
+          _selectedIndex = 0;
+        });
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+          SnackBar(
+            content: Text('เกิดข้อผิดพลาด: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -42,7 +73,6 @@ class _FarmInfoPageState extends State<FarmInfoPage> {
       _navigateToScan();
     } else {
       setState(() {
-        // ปรับการคำนวณ index ใหม่
         _selectedIndex = index > 2 ? index - 1 : index;
       });
     }
@@ -50,8 +80,8 @@ class _FarmInfoPageState extends State<FarmInfoPage> {
 
   @override
   Widget build(BuildContext context) {
-    // คำนวณ currentIndex สำหรับ CustomNavigationBar
-    final navigationIndex = _selectedIndex >= 2 ? _selectedIndex + 1 : _selectedIndex;
+    final navigationIndex =
+        _selectedIndex >= 2 ? _selectedIndex + 1 : _selectedIndex;
 
     return Scaffold(
       appBar: AppBar(
@@ -62,11 +92,14 @@ class _FarmInfoPageState extends State<FarmInfoPage> {
       ),
       body: IndexedStack(
         index: _selectedIndex,
-        children: const [
-          OverviewPage(),
-          Center(child: Text('หน้ารายการ')),
-          Center(child: Text('หน้าแจ้งเตือน')),
-          Center(child: Text('หน้างบประมาณ')),
+        children: [
+          OverviewPage(
+            farm: widget.farm,
+            key: ValueKey('overview-${widget.farm.id}'),
+          ),
+          const Center(child: Text('หน้ารายการ')),
+          const Center(child: Text('หน้าแจ้งเตือน')),
+          const Center(child: Text('หน้างบประมาณ')),
         ],
       ),
       bottomNavigationBar: CustomNavigationBar(

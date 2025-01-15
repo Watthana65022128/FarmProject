@@ -2,9 +2,17 @@ import 'package:flutter/material.dart';
 import '../widgets/overview_card.dart';
 import '../screens/management_expense.dart';
 import '../screens/production_expense.dart';
+import '../models/farm_model.dart';
+import '../services/farm_service.dart';
+import 'package:intl/intl.dart';
 
 class OverviewPage extends StatefulWidget {
-  const OverviewPage({super.key});
+  final FarmModel farm;
+
+  const OverviewPage({
+    super.key,
+    required this.farm,
+  });
 
   @override
   State<OverviewPage> createState() => _OverviewPageState();
@@ -12,11 +20,59 @@ class OverviewPage extends StatefulWidget {
 
 class _OverviewPageState extends State<OverviewPage> {
   String _budget = '0';
+  final FarmService _farmService = FarmService();
 
-  void _updateBudget(String amount) {
-    setState(() {
-      _budget = amount;
-    });
+  @override
+  void initState() {
+    super.initState();
+    // ตั้งค่าเริ่มต้นของ budget จาก farm model
+    if (widget.farm.budget != null) {
+      setState(() {
+        _budget = widget.farm.budget!.toString();
+      });
+    }
+  }
+
+  void _updateBudget(String amount) async {
+    if (widget.farm.id == null) return;
+
+    try {
+      final budget = double.tryParse(amount);
+      if (budget == null) return;
+
+      final success = await _farmService.updateBudget(widget.farm.id!, budget);
+
+      if (mounted) {
+        if (success) {
+          setState(() {
+            _budget = amount;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('อัพเดทงบประมาณสำเร็จ'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('ไม่สามารถอัพเดทงบประมาณได้'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('เกิดข้อผิดพลาด: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -41,7 +97,7 @@ class _OverviewPageState extends State<OverviewPage> {
                 children: [
                   Expanded(
                     child: Text(
-                      '฿${_budget.replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}.00',
+                      '฿${NumberFormat("#,##0.00").format(double.tryParse(_budget) ?? 0)}',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
