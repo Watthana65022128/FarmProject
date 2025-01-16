@@ -100,7 +100,6 @@ class _ExpensePieChartState extends State<ExpensePieChart> {
             ),
           ),
         ],
-        const SizedBox(height: 20),
         Wrap(
           spacing: 20,
           runSpacing: 12,
