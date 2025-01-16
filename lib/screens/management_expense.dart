@@ -1,11 +1,92 @@
 import 'package:flutter/material.dart';
-import '../widgets/overview_card.dart';
+import '../services/expense_service.dart';
 
-class ManagementExpensePage extends StatelessWidget {
-  const ManagementExpensePage({super.key});
+class ManagementExpensePage extends StatefulWidget {
+  final int farmId;
+  const ManagementExpensePage({super.key, required this.farmId});
+
+  @override
+  State<ManagementExpensePage> createState() => _ManagementExpensePageState();
+}
+
+class _ManagementExpensePageState extends State<ManagementExpensePage> {
+  final ExpenseService _expenseService = ExpenseService();
+  bool _isLoading = true;
+  Map<String, double> _expenses = {
+    'equipment': 0,
+    'labor': 0,
+    'transportation': 0,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExpenses();
+  }
+
+  Future<void> _loadExpenses() async {
+    try {
+      setState(() => _isLoading = true);
+      final expenses = await _expenseService.getManagementExpenses(widget.farmId);
+      setState(() {
+        _expenses = expenses;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+        );
+      }
+    }
+  }
+
+  Widget _buildExpenseCard({
+    required String title,
+    required IconData icon,
+    required double amount,
+    required Color color,
+  }) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '฿${amount.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final totalExpense = _expenses.values.reduce((a, b) => a + b);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('ค่าจัดการและการดูแล'),
@@ -13,32 +94,238 @@ class ManagementExpensePage extends StatelessWidget {
         backgroundColor: const Color(0xFFF3FCEE),
         foregroundColor: Colors.black,
       ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            child: const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+      body: RefreshIndicator(
+        onRefresh: _loadExpenses,
+        child: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'รวมค่าใช้จ่ายทั้งหมด',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '฿${totalExpense.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildExpenseCard(
+                    title: 'ค่าอุปกรณ์',
+                    icon: Icons.build,
+                    amount: _expenses['equipment']!,
+                    color: Colors.blue,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildExpenseCard(
+                    title: 'ค่าแรง',
+                    icon: Icons.work,
+                    amount: _expenses['labor']!,
+                    color: Colors.green,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildExpenseCard(
+                    title: 'ค่าขนส่ง',
+                    icon: Icons.local_shipping,
+                    amount: _expenses['transportation']!,
+                    color: Colors.orange,
+                  ),
+                ],
+              ),
+            ),
+      ),
+    );
+  }
+}
+
+class ProductionExpensePage extends StatefulWidget {
+  final int farmId;
+  const ProductionExpensePage({super.key, required this.farmId});
+
+  @override
+  State<ProductionExpensePage> createState() => _ProductionExpensePageState();
+}
+
+class _ProductionExpensePageState extends State<ProductionExpensePage> {
+  final ExpenseService _expenseService = ExpenseService();
+  bool _isLoading = true;
+  Map<String, double> _expenses = {
+    'seeds': 0,
+    'chemicals': 0,
+    'water': 0,
+    'electricity': 0,
+    'fertilizer': 0,
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _loadExpenses();
+  }
+
+  Future<void> _loadExpenses() async {
+    try {
+      setState(() => _isLoading = true);
+      final expenses = await _expenseService.getProductionExpenses(widget.farmId);
+      setState(() {
+        _expenses = expenses;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+        );
+      }
+    }
+  }
+
+  Widget _buildExpenseCard({
+    required String title,
+    required IconData icon,
+    required double amount,
+    required Color color,
+  }) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                OverviewCard(
-                  title: 'ค่าอุปกรณ์',
-                  icon: Icons.build, // ปรับไอคอนให้ตรงกับ title
-                ),
-                SizedBox(height: 20),
-                OverviewCard(
-                  title: 'ค่าแรง',
-                  icon: Icons.work, // ปรับไอคอนให้ตรงกับ title
-                ),
-                SizedBox(height: 20),
-                OverviewCard(
-                  title: 'ค่าขนส่ง',
-                  icon: Icons.local_shipping, // ปรับไอคอนให้ตรงกับ title
+                Icon(icon, color: color, size: 24),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(
+              '฿${amount.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final totalExpense = _expenses.values.reduce((a, b) => a + b);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('ค่าใช้จ่ายในการผลิต'),
+        centerTitle: true,
+        backgroundColor: const Color(0xFFF3FCEE),
+        foregroundColor: Colors.black,
+      ),
+      body: RefreshIndicator(
+        onRefresh: _loadExpenses,
+        child: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          const Text(
+                            'ค่าใช้จ่ายรวม',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '฿${totalExpense.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildExpenseCard(
+                    title: 'ค่าเมล็ดพันธุ์พืช',
+                    icon: Icons.grass,
+                    amount: _expenses['seeds']!,
+                    color: Colors.green,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildExpenseCard(
+                    title: 'ค่าสารเคมี',
+                    icon: Icons.science,
+                    amount: _expenses['chemicals']!,
+                    color: Colors.purple,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildExpenseCard(
+                    title: 'ค่าน้ำ',
+                    icon: Icons.water_drop,
+                    amount: _expenses['water']!,
+                    color: Colors.blue,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildExpenseCard(
+                    title: 'ค่าไฟ',
+                    icon: Icons.electric_bolt,
+                    amount: _expenses['electricity']!,
+                    color: Colors.amber,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildExpenseCard(
+                    title: 'ค่าปุ๋ย',
+                    icon: Icons.eco,
+                    amount: _expenses['fertilizer']!,
+                    color: Colors.brown,
+                  ),
+                ],
+              ),
+            ),
       ),
     );
   }

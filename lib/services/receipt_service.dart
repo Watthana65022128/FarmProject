@@ -16,6 +16,7 @@ class ReceiptService {
     _dio.options.headers['Authorization'] = 'Bearer $token';
   }
 
+
   // สแกนใบเสร็จ
   Future<Map<String, dynamic>> scanReceipt(File image, int farmId) async {
     try {
@@ -88,6 +89,7 @@ class ReceiptService {
       throw _handleError(e);
     }
   }
+
 
   // ลบใบเสร็จ
   Future<void> deleteReceipt(int id) async {

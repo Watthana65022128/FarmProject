@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/overview_card.dart';
-import '../screens/management_expense.dart';
-import '../screens/production_expense.dart';
+import '../screens/management_expense.dart' as management;
+import '../screens/production_expense.dart' as production;
 import '../models/farm_model.dart';
 import '../services/farm_service.dart';
 import 'package:intl/intl.dart';
@@ -25,7 +25,6 @@ class _OverviewPageState extends State<OverviewPage> {
   @override
   void initState() {
     super.initState();
-    // ตั้งค่าเริ่มต้นของ budget จาก farm model
     if (widget.farm.budget != null) {
       setState(() {
         _budget = widget.farm.budget!.toString();
@@ -117,7 +116,7 @@ class _OverviewPageState extends State<OverviewPage> {
           child: Container(
             padding: const EdgeInsets.all(20),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.end, // จัดให้อยู่ด่านล่างสุด
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 OverviewCard(
                   title: 'ค่าจัดการและการดูแล',
@@ -125,7 +124,9 @@ class _OverviewPageState extends State<OverviewPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ManagementExpensePage(),
+                        builder: (context) => management.ManagementExpensePage(
+                          farmId: widget.farm.id!,
+                        ),
                       ),
                     );
                   },
@@ -137,7 +138,9 @@ class _OverviewPageState extends State<OverviewPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const ProductionExpensePage(),
+                        builder: (context) => production.ProductionExpensePage(
+                          farmId: widget.farm.id!,
+                        ),
                       ),
                     );
                   },
