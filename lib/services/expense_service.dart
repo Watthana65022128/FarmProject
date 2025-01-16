@@ -1,3 +1,4 @@
+// expense_service.dart
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -13,7 +14,7 @@ class ExpenseService {
     _dio.options.headers['Authorization'] = 'Bearer $token';
   }
 
-  Future<Map<String, double>> getManagementExpenses(int farmId) async {
+  Future<Map<String, dynamic>> getManagementExpenses(int farmId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token');
@@ -36,16 +37,25 @@ class ExpenseService {
 
       final Map<String, dynamic> data = response.data;
       return {
-        'equipment': (data['equipment']['total'] ?? 0).toDouble(),
-        'labor': (data['labor']['total'] ?? 0).toDouble(),
-        'transportation': (data['transportation']['total'] ?? 0).toDouble(),
+        'equipment': {
+          'total': (data['equipment']['total'] ?? 0).toDouble(),
+          'items': List<Map<String, dynamic>>.from(data['equipment']['items'] ?? []),
+        },
+        'labor': {
+          'total': (data['labor']['total'] ?? 0).toDouble(),
+          'items': List<Map<String, dynamic>>.from(data['labor']['items'] ?? []),
+        },
+        'transportation': {
+          'total': (data['transportation']['total'] ?? 0).toDouble(),
+          'items': List<Map<String, dynamic>>.from(data['transportation']['items'] ?? []),
+        },
       };
     } catch (e) {
       throw _handleError(e);
     }
   }
 
-  Future<Map<String, double>> getProductionExpenses(int farmId) async {
+  Future<Map<String, dynamic>> getProductionExpenses(int farmId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('jwt_token');
@@ -68,11 +78,26 @@ class ExpenseService {
 
       final Map<String, dynamic> data = response.data;
       return {
-        'seeds': (data['seeds']['total'] ?? 0).toDouble(),
-        'chemicals': (data['chemicals']['total'] ?? 0).toDouble(),
-        'water': (data['water']['total'] ?? 0).toDouble(),
-        'electricity': (data['electricity']['total'] ?? 0).toDouble(),
-        'fertilizer': (data['fertilizer']['total'] ?? 0).toDouble(),
+        'seeds': {
+          'total': (data['seeds']['total'] ?? 0).toDouble(),
+          'items': List<Map<String, dynamic>>.from(data['seeds']['items'] ?? []),
+        },
+        'chemicals': {
+          'total': (data['chemicals']['total'] ?? 0).toDouble(),
+          'items': List<Map<String, dynamic>>.from(data['chemicals']['items'] ?? []),
+        },
+        'water': {
+          'total': (data['water']['total'] ?? 0).toDouble(),
+          'items': List<Map<String, dynamic>>.from(data['water']['items'] ?? []),
+        },
+        'electricity': {
+          'total': (data['electricity']['total'] ?? 0).toDouble(),
+          'items': List<Map<String, dynamic>>.from(data['electricity']['items'] ?? []),
+        },
+        'fertilizer': {
+          'total': (data['fertilizer']['total'] ?? 0).toDouble(),
+          'items': List<Map<String, dynamic>>.from(data['fertilizer']['items'] ?? []),
+        },
       };
     } catch (e) {
       throw _handleError(e);
