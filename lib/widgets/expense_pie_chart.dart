@@ -38,53 +38,68 @@ class _ExpensePieChartState extends State<ExpensePieChart> {
           ),
         ),
         const SizedBox(height: 20),
-        SizedBox(
-          height: 240,
-          child: PieChart(
-            PieChartData(
-              pieTouchData: PieTouchData(
-                touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                  setState(() {
-                    if (!event.isInterestedForInteractions ||
-                        pieTouchResponse == null ||
-                        pieTouchResponse.touchedSection == null) {
-                      touchedIndex = -1;
-                      return;
-                    }
-                    touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
-                  });
-                },
+        if (total == 0) ...[
+          const SizedBox(
+            height: 240,
+            child: Center(
+              child: Text(
+                'ไม่มีข้อมูลรายจ่าย',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
               ),
-              borderData: FlBorderData(show: false),
-              sectionsSpace: 2,
-              centerSpaceRadius: 40,
-              sections: [
-                PieChartSectionData(
-                  color: Colors.orange,
-                  value: widget.managementExpense,
-                  title: '${((widget.managementExpense / total) * 100).toStringAsFixed(1)}%',
-                  radius: touchedIndex == 0 ? 110 : 100,
-                  titleStyle: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                PieChartSectionData(
-                  color: Colors.green,
-                  value: widget.productionExpense,
-                  title: '${((widget.productionExpense / total) * 100).toStringAsFixed(1)}%',
-                  radius: touchedIndex == 1 ? 110 : 100,
-                  titleStyle: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
             ),
           ),
-        ),
+        ] else ...[
+          SizedBox(
+            height: 240,
+            child: PieChart(
+              PieChartData(
+                pieTouchData: PieTouchData(
+                  touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                    setState(() {
+                      if (!event.isInterestedForInteractions ||
+                          pieTouchResponse == null ||
+                          pieTouchResponse.touchedSection == null) {
+                        touchedIndex = -1;
+                        return;
+                      }
+                      touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                    });
+                  },
+                ),
+                borderData: FlBorderData(show: false),
+                sectionsSpace: 2,
+                centerSpaceRadius: 40,
+                sections: [
+                  PieChartSectionData(
+                    color: Colors.orange,
+                    value: widget.managementExpense,
+                    title: '${((widget.managementExpense / total) * 100).toStringAsFixed(1)}%',
+                    radius: touchedIndex == 0 ? 110 : 100,
+                    titleStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  PieChartSectionData(
+                    color: Colors.green,
+                    value: widget.productionExpense,
+                    title: '${((widget.productionExpense / total) * 100).toStringAsFixed(1)}%',
+                    radius: touchedIndex == 1 ? 110 : 100,
+                    titleStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 20),
         Wrap(
           spacing: 20,

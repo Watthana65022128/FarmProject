@@ -64,52 +64,93 @@ class _ManagementExpensePageState extends State<ManagementExpensePage> {
     required IconData icon,
     required Map<String, dynamic> expenseData,
     required Color color,
+    required String description,
   }) {
     return Card(
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 3,
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: InkWell(
         onTap: () => _showCategoryDetail(
           title,
           List<Map<String, dynamic>>.from(expenseData['items']),
           color,
         ),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(icon, color: color, size: 24),
-                  const SizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(icon, color: color, size: 28),
+                  ),
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          description,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const Icon(Icons.arrow_forward_ios, size: 16),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                '฿${expenseData['total'].toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-              Text(
-                '${expenseData['items'].length} รายการ',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '฿${expenseData['total'].toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      '${expenseData['items'].length} รายการ',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -124,11 +165,13 @@ class _ManagementExpensePageState extends State<ManagementExpensePage> {
         .fold<double>(0, (sum, category) => sum + (category['total'] as double));
 
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('ค่าจัดการและการดูแล'),
         centerTitle: true,
         backgroundColor: const Color(0xFFF3FCEE),
         foregroundColor: Colors.black,
+        elevation: 0,
       ),
       body: RefreshIndicator(
         onRefresh: _loadExpenses,
@@ -136,55 +179,79 @@ class _ManagementExpensePageState extends State<ManagementExpensePage> {
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          const Text(
-                            'ค่าใช้จ่ายรวม',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    // Summary Card
+                    Card(
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.settings,
+                                color: Colors.orange,
+                                size: 32,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '฿${totalExpense.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange,
+                            const SizedBox(height: 16),
+                            const Text(
+                              'ค่าใช้จ่ายรวมในการจัดการ',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 8),
+                            Text(
+                              '฿${totalExpense.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.orange,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildExpenseCard(
-                    title: 'ค่าอุปกรณ์',
-                    icon: Icons.build,
-                    expenseData: _expenses['equipment']!,
-                    color: Colors.blue,
-                  ),
-                  _buildExpenseCard(
-                    title: 'ค่าแรง',
-                    icon: Icons.work,
-                    expenseData: _expenses['labor']!,
-                    color: Colors.green,
-                  ),
-                  _buildExpenseCard(
-                    title: 'ค่าขนส่ง',
-                    icon: Icons.local_shipping,
-                    expenseData: _expenses['transportation']!,
-                    color: Colors.orange,
-                  ),
-                ],
+                    const SizedBox(height: 16),
+
+                    // Expense Cards
+                    _buildExpenseCard(
+                      title: 'ค่าอุปกรณ์',
+                      icon: Icons.build,
+                      expenseData: _expenses['equipment']!,
+                      color: Colors.blue,
+                      description: 'อุปกรณ์และเครื่องมือทางการเกษตร',
+                    ),
+                    _buildExpenseCard(
+                      title: 'ค่าแรง',
+                      icon: Icons.work,
+                      expenseData: _expenses['labor']!,
+                      color: Colors.green,
+                      description: 'ค่าจ้างแรงงานในการทำการเกษตร',
+                    ),
+                    _buildExpenseCard(
+                      title: 'ค่าขนส่ง',
+                      icon: Icons.local_shipping,
+                      expenseData: _expenses['transportation']!,
+                      color: Colors.orange,
+                      description: 'ค่าขนส่งและการเดินทาง',
+                    ),
+                  ],
+                ),
               ),
             ),
       ),
