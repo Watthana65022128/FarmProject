@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/farm_model.dart';
 import '../services/farm_service.dart';
 import './farm_info.dart';
+import 'package:intl/intl.dart';
 
 class FarmListPage extends StatefulWidget {
   final FarmModel? newFarm;
@@ -54,35 +55,24 @@ class _FarmListPageState extends State<FarmListPage> {
       setState(() => _isLoading = true);
 
       try {
-        final success = await _farmService.removeFarm(farm.id!);
-        if (success) {
-          // อัพเดทรายการไร่ทันทีหลังจากลบสำเร็จ
-          setState(() {
-            _farms.removeWhere((f) => f.id == farm.id);
-            _isLoading = false; // อัพเดทสถานะหลังลบสำเร็จ
-          });
-
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('ลบไร่สำเร็จ'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
-        } else {
-          setState(() {
-            _isLoading = false;
-          });
-          if (mounted) {
-            _showErrorSnackBar('ลบไร่สำเร็จ');
-          }
-        }
-      } catch (e) {
-        // เกิดข้อผิดพลาดในการลบ
+        await _farmService.removeFarm(farm.id!);
+        
+        // หลังจากลบสำเร็จ อัพเดท state และแสดงข้อความ
         setState(() {
+          _farms.removeWhere((f) => f.id == farm.id);
           _isLoading = false;
         });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('ลบไร่สำเร็จ'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        setState(() => _isLoading = false);
         if (mounted) {
           _showErrorSnackBar('เกิดข้อผิดพลาดในการลบไร่: ${e.toString()}');
         }
@@ -93,8 +83,9 @@ class _FarmListPageState extends State<FarmListPage> {
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-          content: Text(message),
-          backgroundColor: const Color.fromARGB(255, 4, 202, 53)),
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
     );
   }
 
@@ -103,67 +94,252 @@ class _FarmListPageState extends State<FarmListPage> {
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(
-          'ยืนยันการลบ',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Colors.red,
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        content: Text(
-          'คุณต้องการลบ "$farmName" ใช่หรือไม่?',
-          style: const TextStyle(fontSize: 18),
+        title: Column(
+          children: [
+            const Icon(
+              Icons.warning_amber_rounded,
+              color: Colors.red,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'ยืนยันการลบไร่ "$farmName"',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'การลบไร่จะทำให้ข้อมูลทั้งหมดหายไป\nคุณแน่ใจหรือไม่ที่จะดำเนินการต่อ?',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 16),
         ),
         actions: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.grey,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'ยกเลิก',
-                  style: TextStyle(fontSize: 16),
+                  child: const Text(
+                    'ยกเลิก',
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: 16,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: 22),
-              ElevatedButton(
-                onPressed: () {
-                  confirmed = true;
-                  Navigator.of(context).pop();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    confirmed = true;
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'ยืนยัน',
-                  style: TextStyle(fontSize: 16),
+                  child: const Text(
+                    'ลบไร่',
+                    style: TextStyle(fontSize: 16),
+                  ),
                 ),
               ),
             ],
           ),
         ],
+        actionsAlignment: MainAxisAlignment.center,
+        actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
       ),
     );
     return confirmed;
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            'assets/logo.png',
+            height: 120,
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'คุณยังไม่มีไร่',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'เริ่มต้นสร้างไร่ของคุณเพื่อจัดการค่าใช้จ่าย',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () {
+              // Navigate to create farm page
+            },
+            icon: const Icon(Icons.add),
+            label: const Text('สร้างไร่ใหม่'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFarmCard(FarmModel farm) {
+    // ใช้ icon แทนรูปภาพ เนื่องจากยังไม่มี field image
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => FarmInfoPage(farm: farm),
+              ),
+            ).then((_) => _loadFarms());
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    // Farm Image or Icon
+                    Container(
+                      width: 64,
+                      height: 64,
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                              Icons.agriculture,
+                              color: Colors.green,
+                              size: 32,
+                            ),
+                    ),
+                    const SizedBox(width: 16),
+                    // Farm Details
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            farm.name.toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${farm.startMonth} - ${farm.endMonth}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (farm.budget != null) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.account_balance_wallet,
+                                    size: 16,
+                                    color: Colors.green,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '฿${NumberFormat("#,##0").format(farm.budget)}',
+                                    style: const TextStyle(
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    // Delete Button
+                    IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        color: Colors.red,
+                      ),
+                      onPressed: () => _deleteFarm(farm),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -173,114 +349,66 @@ class _FarmListPageState extends State<FarmListPage> {
         title: const Text('รายการไร่ทั้งหมด'),
         centerTitle: true,
         backgroundColor: const Color(0xFFF3FCEE),
-        foregroundColor: Colors.black,
+        elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'assets/logo.png',
-                        height: 120,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(_error!, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadFarms,
-                        child: const Text('ลองใหม่'),
-                      ),
-                    ],
-                  ),
-                )
-              : _farms.isEmpty
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            'assets/logo.png',
-                            height: 120,
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'ไม่มีรายการไร่',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                        ],
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadFarms,
-                      child: ListView.builder(
-                        itemCount: _farms.length,
-                        padding: const EdgeInsets.all(16),
-                        itemBuilder: (context, index) {
-                          return _buildFarmCard(_farms[index]);
-                        },
-                      ),
-                    ),
-    );
-  }
-
-  Widget _buildFarmCard(FarmModel farm) {
-    return SizedBox(
-      height: 120,
-      child: Card(
-        margin: const EdgeInsets.only(top: 10, bottom: 10),
-        child: Center(
-          child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            leading: Container(
-              padding: const EdgeInsets.only(top: 5),
-              child: const Icon(
-                Icons.agriculture,
-                color: Colors.green,
-                size: 32,
-              ),
-            ),
-            title: Text(
-              farm.name.toUpperCase(),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 22,
-                color: Colors.green,
-              ),
-            ),
-            subtitle: Container(
-              padding: const EdgeInsets.only(top: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ระยะเวลา: ${farm.startMonth} - ${farm.endMonth}',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ],
-              ),
-            ),
-            trailing: IconButton(
-              icon: const Icon(
-                Icons.delete,
-                color: Colors.red,
-                size: 28,
-              ),
-              onPressed: () => _deleteFarm(farm),
-            ),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FarmInfoPage(farm: farm),
-                ),
-              ).then((_) => _loadFarms());
-            },
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              const Color(0xFFF3FCEE),
+              Colors.grey[50]!,
+            ],
           ),
         ),
+        child: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                ),
+              )
+            : _error != null
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _error!,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: _loadFarms,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('ลองใหม่'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : _farms.isEmpty
+                    ? _buildEmptyState()
+                    : RefreshIndicator(
+                        onRefresh: _loadFarms,
+                        color: Colors.green,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _farms.length,
+                          itemBuilder: (context, index) {
+                            return _buildFarmCard(_farms[index]);
+                          },
+                        ),
+                      ),
       ),
     );
   }
