@@ -13,6 +13,16 @@ class ExpenseCategoryDetailPage extends StatelessWidget {
     required this.color,
   });
 
+  List<Map<String, dynamic>> get _sortedItems {
+    final sortedList = List<Map<String, dynamic>>.from(items);
+    sortedList.sort((a, b) {
+      final dateA = DateTime.parse(a['date'].toString());
+      final dateB = DateTime.parse(b['date'].toString());
+      return dateB.compareTo(dateA); // เรียงจากวันที่ใหม่ไปเก่า
+    });
+    return sortedList;
+  }
+
   @override
   Widget build(BuildContext context) {
     final totalAmount = items.fold<double>(
@@ -30,7 +40,6 @@ class ExpenseCategoryDetailPage extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // Summary Section with gradient background
           Container(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             child: Card(
@@ -73,7 +82,6 @@ class ExpenseCategoryDetailPage extends StatelessWidget {
             ),
           ),
 
-          // List Header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             child: Row(
@@ -100,13 +108,12 @@ class ExpenseCategoryDetailPage extends StatelessWidget {
             ),
           ),
 
-          // List of items
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: items.length,
+              itemCount: _sortedItems.length,
               itemBuilder: (context, index) {
-                final item = items[index];
+                final item = _sortedItems[index];
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
                   elevation: 2,
@@ -126,7 +133,6 @@ class ExpenseCategoryDetailPage extends StatelessWidget {
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              // Description and Shop name
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +165,6 @@ class ExpenseCategoryDetailPage extends StatelessWidget {
                                   ],
                                 ),
                               ),
-                              // Amount
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [

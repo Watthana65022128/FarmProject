@@ -5,6 +5,8 @@ import 'scan.dart';
 import '../screens/overview_home.dart';
 import '../models/receipt_model.dart';
 import '../screens/transaction_list.dart';
+import 'budget.dart';
+import 'notification.dart';
 
 class FarmInfoPage extends StatefulWidget {
   final FarmModel farm;
@@ -99,8 +101,14 @@ class _FarmInfoPageState extends State<FarmInfoPage> {
             key: ValueKey('overview-${widget.farm.id}'),
           ),
           TransactionListPage(farmId: widget.farm.id!),
-          const Center(child: Text('หน้าแจ้งเตือน')),
-          const Center(child: Text('หน้างบประมาณ')),
+          NotificationPage(
+            farmId: widget.farm.id!,
+            budget: widget.farm.budget ?? 0,
+          ),
+          BudgetPage(
+            farmId: widget.farm.id!,
+            budget: widget.farm.budget ?? 0,
+          ),
         ],
       ),
       bottomNavigationBar: CustomNavigationBar(
