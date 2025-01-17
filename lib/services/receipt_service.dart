@@ -16,6 +16,60 @@ class ReceiptService {
     _dio.options.headers['Authorization'] = 'Bearer $token';
   }
 
+  Future<List<Receipt>> getReceipts({
+    required int farmId,
+    required String dateFilter,
+  }) async {
+    try {
+      // คำนวณช่วงวันที่
+      final now = DateTime.now();
+      DateTime startDate;
+      final endDate = now;
+
+      switch (dateFilter) {
+        case 'today':
+          startDate = DateTime(now.year, now.month, now.day);
+          break;
+        case 'week':
+          startDate = now.subtract(Duration(days: now.weekday - 1));
+          break;
+        case 'month':
+          startDate = DateTime(now.year, now.month - 1, now.day);
+          break;
+        case 'threeMonths':
+          startDate = DateTime(now.year, now.month - 3, now.day);
+          break;
+        case 'sixMonths':
+          startDate = DateTime(now.year, now.month - 6, now.day);
+          break;
+        default:
+          startDate = DateTime(now.year, now.month, now.day);
+      }
+
+      final response = await _dio.get(
+        '/receipts',
+        queryParameters: {
+          'farmId': farmId,
+          'startDate': startDate.toIso8601String(),
+          'endDate': endDate.toIso8601String(),
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['receipts'] != null && data['receipts'] is List) {
+          return (data['receipts'] as List)
+              .map((json) => Receipt.fromJson(json))
+              .toList();
+        }
+      }
+      
+      return [];
+    } catch (e) {
+      print('Error fetching receipts: $e');
+      throw Exception('ไม่สามารถดึงข้อมูลใบเสร็จได้');
+    }
+  }
 
   // สแกนใบเสร็จ
   Future<Map<String, dynamic>> scanReceipt(File image, int farmId) async {

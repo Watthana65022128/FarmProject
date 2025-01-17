@@ -25,19 +25,12 @@ class _ExpensePieChartState extends State<ExpensePieChart> {
     return Column(
       children: [
         Text(
-          'รายจ่ายทั้งหมด',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          'สัดส่วนค่าใช้จ่าย',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
-        Text(
-          '฿${total.toStringAsFixed(2)}',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            color: Colors.green,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 30),
         if (total == 0) ...[
           const SizedBox(
             height: 240,
@@ -100,6 +93,7 @@ class _ExpensePieChartState extends State<ExpensePieChart> {
             ),
           ),
         ],
+        const SizedBox(height: 20),
         Wrap(
           spacing: 20,
           runSpacing: 12,
@@ -108,12 +102,10 @@ class _ExpensePieChartState extends State<ExpensePieChart> {
             _buildIndicator(
               color: Colors.orange,
               text: 'ค่าจัดการและการดูแล',
-              amount: widget.managementExpense,
             ),
             _buildIndicator(
               color: Colors.green,
               text: 'ค่าใช้จ่ายในการผลิต',
-              amount: widget.productionExpense,
             ),
           ],
         ),
@@ -124,7 +116,6 @@ class _ExpensePieChartState extends State<ExpensePieChart> {
   Widget _buildIndicator({
     required Color color,
     required String text,
-    required double amount,
   }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -138,18 +129,7 @@ class _ExpensePieChartState extends State<ExpensePieChart> {
           ),
         ),
         const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(text),
-            Text(
-              '฿${amount.toStringAsFixed(2)}',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
+        Text(text),
       ],
     );
   }

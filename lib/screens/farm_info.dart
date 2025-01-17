@@ -4,6 +4,7 @@ import '../widgets/custom_navigation_bar.dart';
 import 'scan.dart';
 import '../screens/overview_home.dart';
 import '../models/receipt_model.dart';
+import '../screens/transaction_list.dart';
 
 class FarmInfoPage extends StatefulWidget {
   final FarmModel farm;
@@ -97,7 +98,7 @@ class _FarmInfoPageState extends State<FarmInfoPage> {
             farm: widget.farm,
             key: ValueKey('overview-${widget.farm.id}'),
           ),
-          const Center(child: Text('หน้ารายการ')),
+          TransactionListPage(farmId: widget.farm.id!),
           const Center(child: Text('หน้าแจ้งเตือน')),
           const Center(child: Text('หน้างบประมาณ')),
         ],
