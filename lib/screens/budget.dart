@@ -207,6 +207,7 @@ class _BudgetPageState extends State<BudgetPage> {
                   color: color,
                 ),
                 const SizedBox(width: 8),
+                
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(

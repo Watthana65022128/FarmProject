@@ -20,8 +20,10 @@ class _NotificationPageState extends State<NotificationPage> {
   final ExpenseService _expenseService = ExpenseService();
   bool _isLoading = true;
   double _totalExpense = 0;
-  bool _showBudgetAlert = false;
   double _usagePercentage = 0;
+  bool _showWarningLevel1 = false; // 60%
+  bool _showWarningLevel2 = false; // 80%
+  bool _showWarningLevel3 = false; // 90%
 
   @override
   void initState() {
@@ -49,9 +51,13 @@ class _NotificationPageState extends State<NotificationPage> {
       _usagePercentage = (widget.budget > 0) 
         ? (_totalExpense / widget.budget * 100) 
         : 0;
-      _showBudgetAlert = _usagePercentage >= 80;
 
-      setState(() => _isLoading = false);
+      setState(() {
+        _showWarningLevel1 = _usagePercentage >= 60;
+        _showWarningLevel2 = _usagePercentage >= 80;
+        _showWarningLevel3 = _usagePercentage >= 90;
+        _isLoading = false;
+      });
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
@@ -62,46 +68,37 @@ class _NotificationPageState extends State<NotificationPage> {
     }
   }
 
-  Widget _buildBudgetAlertCard() {
-    if (!_showBudgetAlert) {
-      return Card(
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: const Padding(
-          padding: EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Icon(
-                Icons.check_circle_outline,
-                color: Colors.green,
-                size: 48,
-              ),
-              SizedBox(height: 16),
-              Text(
-                'ไม่มีการแจ้งเตือนในขณะนี้',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'การใช้งบประมาณของคุณอยู่ในเกณฑ์ปกติ',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+  Color _getWarningColor() {
+    if (_usagePercentage >= 90) return Colors.red;
+    if (_usagePercentage >= 80) return Colors.orange;
+    if (_usagePercentage >= 60) return Colors.yellow.shade700;
+    return Colors.green;
+  }
 
+  String _getWarningMessage() {
+    if (_usagePercentage >= 90) {
+      return 'คำเตือน: ใช้งบประมาณเกิน 90% แล้ว\nควรระมัดระวังการใช้จ่ายอย่างยิ่ง!';
+    }
+    if (_usagePercentage >= 80) {
+      return 'คำเตือน: ใช้งบประมาณเกิน 80% แล้ว\nควรพิจารณาลดค่าใช้จ่ายลง';
+    }
+    if (_usagePercentage >= 60) {
+      return 'แจ้งเตือน: ใช้งบประมาณเกิน 60% แล้ว\nควรเริ่มระมัดระวังการใช้จ่าย';
+    }
+    return 'การใช้งบประมาณอยู่ในเกณฑ์ปกติ';
+  }
+
+  IconData _getWarningIcon() {
+    if (_usagePercentage >= 90) return Icons.error_outline;
+    if (_usagePercentage >= 80) return Icons.warning_amber_rounded;
+    if (_usagePercentage >= 60) return Icons.info_outline;
+    return Icons.check_circle_outline;
+  }
+
+  Widget _buildWarningCard() {
+    final warningColor = _getWarningColor();
+    final warningMessage = _getWarningMessage();
+    final warningIcon = _getWarningIcon();
     final remainingBudget = widget.budget - _totalExpense;
     final formattedUsagePercentage = _usagePercentage.toStringAsFixed(1);
 
@@ -110,47 +107,68 @@ class _NotificationPageState extends State<NotificationPage> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
-      color: Colors.red.shade50,
+      color: warningColor.withOpacity(0.1),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
+            // Warning Icon
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: warningColor.withOpacity(0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Icon(
-                Icons.warning_amber_rounded,
-                color: Colors.red.shade700,
+                warningIcon,
+                color: warningColor,
                 size: 48,
               ),
             ),
             const SizedBox(height: 16),
+
+            // Warning Title
             Text(
-              'คำเตือน: ใช้งบประมาณไปแล้ว $formattedUsagePercentage%',
+              'ใช้งบประมาณไปแล้ว $formattedUsagePercentage%',
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.red.shade700,
+                color: warningColor,
               ),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'คุณได้ใช้งบประมาณเกินกว่า 80% แล้ว\nกรุณาตรวจสอบและวางแผนการใช้จ่าย',
+            const SizedBox(height: 8),
+
+            // Warning Message
+            Text(
+              warningMessage,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
                 height: 1.5,
               ),
             ),
             const SizedBox(height: 24),
+
+            // Budget Details
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 children: [
@@ -163,7 +181,7 @@ class _NotificationPageState extends State<NotificationPage> {
                   _buildBudgetInfo(
                     'ใช้ไปแล้ว',
                     _totalExpense,
-                    Colors.red,
+                    warningColor,
                   ),
                   const Divider(height: 24),
                   _buildBudgetInfo(
@@ -174,14 +192,27 @@ class _NotificationPageState extends State<NotificationPage> {
                 ],
               ),
             ),
+
+            // Progress Bar
+            const SizedBox(height: 24),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: _usagePercentage / 100,
+                backgroundColor: Colors.grey.shade200,
+                color: warningColor,
+                minHeight: 12,
+              ),
+            ),
+
             const SizedBox(height: 24),
             OutlinedButton.icon(
               onPressed: _loadData,
               icon: const Icon(Icons.refresh),
               label: const Text('รีเฟรชข้อมูล'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.red.shade700,
-                side: BorderSide(color: Colors.red.shade700),
+                foregroundColor: warningColor,
+                side: BorderSide(color: warningColor),
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -208,7 +239,7 @@ class _NotificationPageState extends State<NotificationPage> {
         Text(
           '฿${NumberFormat("#,##0.00").format(amount)}',
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
             color: color,
           ),
@@ -229,7 +260,7 @@ class _NotificationPageState extends State<NotificationPage> {
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
           children: [
-            _buildBudgetAlertCard(),
+            _buildWarningCard(),
           ],
         ),
       ),
