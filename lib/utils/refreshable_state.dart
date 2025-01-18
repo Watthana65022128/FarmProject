@@ -1,0 +1,3 @@
+mixin RefreshableState {
+  void refreshData();
+}

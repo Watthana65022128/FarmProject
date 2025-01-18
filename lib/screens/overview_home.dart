@@ -7,20 +7,23 @@ import '../models/farm_model.dart';
 import '../services/farm_service.dart';
 import '../services/expense_service.dart';
 import 'package:intl/intl.dart';
+import '../utils/refreshable_state.dart';
 
 class OverviewPage extends StatefulWidget {
   final FarmModel farm;
+  final Function(double)? onBudgetUpdate;
 
   const OverviewPage({
     super.key,
     required this.farm,
+    this.onBudgetUpdate,
   });
 
   @override
   State<OverviewPage> createState() => _OverviewPageState();
 }
 
-class _OverviewPageState extends State<OverviewPage> {
+class _OverviewPageState extends State<OverviewPage> with RefreshableState {
   String _budget = '0';
   final FarmService _farmService = FarmService();
   final ExpenseService _expenseService = ExpenseService();
@@ -29,50 +32,75 @@ class _OverviewPageState extends State<OverviewPage> {
   double _productionExpense = 0;
 
   @override
+  void refreshData() {
+    _loadData();
+  }
+
+  @override
   void initState() {
     super.initState();
     _loadData();
   }
+  
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+  setState(() => _isLoading = true);
+  try {
+    // โหลดข้อมูลงบประมาณ
+    if (widget.farm.budget != null) {
+      setState(() {
+        _budget = widget.farm.budget!.toString();
+      });
+    }
+
+    // เช็ค farm id
+    if (widget.farm.id == null) {
+      throw Exception('ไม่พบข้อมูล ID ของไร่');
+    }
+
+    // โหลดข้อมูลค่าใช้จ่ายทั้งสองประเภท
     try {
-      // โหลดข้อมูลงบประมาณ
-      if (widget.farm.budget != null) {
+      final managementData = await _expenseService.getManagementExpenses(widget.farm.id!);
+      final productionData = await _expenseService.getProductionExpenses(widget.farm.id!);
+
+      if (mounted) {
         setState(() {
-          _budget = widget.farm.budget!.toString();
+          // กำหนดค่าเริ่มต้นเป็น 0 ถ้าไม่มีข้อมูล
+          _managementExpense = managementData.values.fold(
+            0.0,
+            (sum, category) => sum + (category['total'] as double? ?? 0.0),
+          );
+          _productionExpense = productionData.values.fold(
+            0.0,
+            (sum, category) => sum + (category['total'] as double? ?? 0.0),
+          );
         });
       }
-
-      // โหลดข้อมูลค่าใช้จ่ายทั้งสองประเภท
-      final managementData =
-          await _expenseService.getManagementExpenses(widget.farm.id!);
-      final productionData =
-          await _expenseService.getProductionExpenses(widget.farm.id!);
-
-      setState(() {
-        _managementExpense = managementData.values.fold(
-          0.0,
-          (sum, category) => sum + (category['total'] as double),
-        );
-        _productionExpense = productionData.values.fold(
-          0.0,
-          (sum, category) => sum + (category['total'] as double),
-        );
-        _isLoading = false;
-      });
     } catch (e) {
-      setState(() => _isLoading = false);
+      // ถ้าเกิด error ในการโหลดข้อมูลค่าใช้จ่าย ให้กำหนดค่าเป็น 0
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('เกิดข้อผิดพลาด: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        setState(() {
+          _managementExpense = 0;
+          _productionExpense = 0;
+        });
       }
     }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  } catch (e) {
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        _managementExpense = 0;
+        _productionExpense = 0;
+      });
+    }
   }
+}
 
   void _updateBudget(String amount) async {
     if (widget.farm.id == null) return;
@@ -88,6 +116,9 @@ class _OverviewPageState extends State<OverviewPage> {
           setState(() {
             _budget = amount;
           });
+          
+          // เรียกใช้ callback ถ้ามี
+          widget.onBudgetUpdate?.call(budget);
 
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -118,102 +149,104 @@ class _OverviewPageState extends State<OverviewPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return RefreshIndicator(
       onRefresh: _loadData,
-      child: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 12),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'วงเงินงบประมาณ',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black87,
+                  const Text(
+                    'วงเงินงบประมาณ',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '฿${NumberFormat("#,##0.00").format(double.tryParse(_budget) ?? 0)}',
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
                           ),
                         ),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                '฿${NumberFormat("#,##0.00").format(double.tryParse(_budget) ?? 0)}',
-                                style: const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
-                                ),
-                              ),
-                            ),
-                            EditAmountButton(
-                              onAmountSubmitted: _updateBudget,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // Expense Pie Chart
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: ExpensePieChart(
-                      managementExpense: _managementExpense,
-                      productionExpense: _productionExpense,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Navigation Cards
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        OverviewCard(
-                          title: 'ค่าจัดการและการดูแล',
-                          icon: Icons.settings,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    management.ManagementExpensePage(
-                                  farmId: widget.farm.id!,
-                                ),
-                              ),
-                            ).then((_) => _loadData());
-                          },  
-                        ),
-                        const SizedBox(height: 16),
-                        OverviewCard(
-                          title: 'ค่าใช้จ่ายในการผลิต',
-                          icon: Icons.agriculture,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    production.ProductionExpensePage(
-                                  farmId: widget.farm.id!,
-                                ),
-                              ),
-                            ).then((_) => _loadData());
-                          },
-                        ),
-                      ],
-                    ),
+                      ),
+                      EditAmountButton(
+                        onAmountSubmitted: _updateBudget,
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 20),
+
+            // Expense Pie Chart
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ExpensePieChart(
+                managementExpense: _managementExpense,
+                productionExpense: _productionExpense,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Navigation Cards
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  OverviewCard(
+                    title: 'ค่าจัดการและการดูแล',
+                    icon: Icons.settings,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              management.ManagementExpensePage(
+                            farmId: widget.farm.id!,
+                          ),
+                        ),
+                      ).then((_) => _loadData());
+                    },  
+                  ),
+                  const SizedBox(height: 16),
+                  OverviewCard(
+                    title: 'ค่าใช้จ่ายในการผลิต',
+                    icon: Icons.agriculture,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              production.ProductionExpensePage(
+                            farmId: widget.farm.id!,
+                          ),
+                        ),
+                      ).then((_) => _loadData());
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

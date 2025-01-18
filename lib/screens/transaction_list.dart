@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../models/receipt_model.dart';
 import '../services/receipt_service.dart';
 import '../auth/auth_service.dart';
+import '../utils/refreshable_state.dart';
 
 class TransactionListPage extends StatefulWidget {
   final int farmId;
@@ -16,7 +17,7 @@ class TransactionListPage extends StatefulWidget {
   State<TransactionListPage> createState() => _TransactionListPageState();
 }
 
-class _TransactionListPageState extends State<TransactionListPage> {
+class _TransactionListPageState extends State<TransactionListPage> with RefreshableState {
   String _selectedFilter = 'today';
   List<Receipt> _receipts = [];
   bool _isLoading = false;
@@ -30,6 +31,11 @@ class _TransactionListPageState extends State<TransactionListPage> {
     {'key': 'threeMonths', 'label': '3 เดือน'},
     {'key': 'sixMonths', 'label': '6 เดือน'},
   ];
+
+  @override
+  void refreshData() {
+    _fetchReceipts();
+  }
 
   @override
   void initState() {

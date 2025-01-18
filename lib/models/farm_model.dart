@@ -13,18 +13,17 @@ class FarmModel {
     this.budget,
   });
 
-  // แปลงจาก JSON เป็น Model
   factory FarmModel.fromJson(Map<String, dynamic> json) {
+    print('Parsing FarmModel from JSON: $json'); // เพิ่ม log
     return FarmModel(
-      id: json['id'] != null ? int.tryParse(json['id'].toString()) : null,
+      id: json['id'] != null ? int.parse(json['id'].toString()) : null,
       name: json['name'] ?? '',
       startMonth: json['startMonth'] ?? '',
       endMonth: json['endMonth'] ?? '',
-      budget: json['budget'] != null ? double.tryParse(json['budget'].toString()) : null,
+      budget: json['budget'] != null ? double.parse(json['budget'].toString()) : null,
     );
   }
 
-  // แปลงจาก Model เป็น JSON
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -35,13 +34,6 @@ class FarmModel {
     };
   }
 
-  // แปลงจาก Map เป็น Model (alias ของ fromJson)
-  factory FarmModel.fromMap(Map<String, dynamic> map) => FarmModel.fromJson(map);
-
-  // แปลงจาก Model เป็น Map (alias ของ toJson)
-  Map<String, dynamic> toMap() => toJson();
-
-  // สร้าง copy ของ Model พร้อมอัพเดทข้อมูลบางส่วน
   FarmModel copyWith({
     int? id,
     String? name,

@@ -48,50 +48,67 @@ class FarmService {
   }
 
   Future<bool> createFarm(FarmModel farm, [String? providedToken]) async {
-    final url = Uri.parse('$baseUrl/farm');
+  final url = Uri.parse('$baseUrl/farm');
 
-    String? token = providedToken;
-    if (token == null) {
-      final prefs = await SharedPreferences.getInstance();
-      token = prefs.getString('jwt_token');
-    }
+  String? token = providedToken;
+  if (token == null) {
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('jwt_token');
+  }
 
-    if (token == null) {
-      print('Error: ไม่พบ token กรุณา login ใหม่');
-      return false;
-    }
+  if (token == null) {
+    print('Error: ไม่พบ token กรุณา login ใหม่');
+    return false;
+  }
 
-    try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: json.encode(farm.toJson()),
-      );
+  try {
+    print('Sending farm data: ${farm.toJson()}'); // เพิ่ม log
 
-      print('Response status: ${response.statusCode}');
-      print('Response body: ${response.body}');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: json.encode(farm.toJson()),
+    );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
 
-        if (responseData['success'] == true ||
-            responseData.containsKey('data') ||
-            responseData['message']?.contains('สำเร็จ') == true) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final responseData = json.decode(response.body);
+      
+      // ตรวจสอบข้อมูลที่ได้รับกลับมา
+      print('Response data: $responseData');
+      
+      if (responseData['data'] != null) {
+        // สร้าง FarmModel จากข้อมูลที่ได้รับกลับมา
+        try {
+          FarmModel newFarm = FarmModel.fromJson(responseData['data']);
+          print('Created new farm: $newFarm');
           return true;
+        } catch (e) {
+          print('Error parsing farm data: $e');
+          return false;
         }
       }
-
-      print('Error response: ${response.body}');
-      return false;
-    } catch (e) {
-      print('Exception during farm creation: $e');
-      return false;
+      
+      return responseData['message']?.contains('สำเร็จ') == true;
     }
+
+    print('Farm creation failed. Status: ${response.statusCode}');
+    print('Error response: ${response.body}');
+    return false;
+  } catch (e) {
+    print('Error creating farm: $e');
+    if (e is FormatException) {
+      print('Format error details: ${e.message}');
+    }
+    return false;
   }
+}
 
   Future<List<FarmModel>> getFarms([String? providedToken]) async {
     final url = Uri.parse('$baseUrl/farms');

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/expense_service.dart';
 import 'package:intl/intl.dart';
+import '../utils/refreshable_state.dart';
 
 class NotificationPage extends StatefulWidget {
   final int farmId;
@@ -16,7 +17,7 @@ class NotificationPage extends StatefulWidget {
   State<NotificationPage> createState() => _NotificationPageState();
 }
 
-class _NotificationPageState extends State<NotificationPage> {
+class _NotificationPageState extends State<NotificationPage> with RefreshableState {
   final ExpenseService _expenseService = ExpenseService();
   bool _isLoading = true;
   double _totalExpense = 0;
@@ -24,6 +25,11 @@ class _NotificationPageState extends State<NotificationPage> {
   bool _showWarningLevel1 = false; // 60%
   bool _showWarningLevel2 = false; // 80%
   bool _showWarningLevel3 = false; // 90%
+
+  @override
+  void refreshData() {
+    _loadData();
+  }
 
   @override
   void initState() {
@@ -202,21 +208,6 @@ class _NotificationPageState extends State<NotificationPage> {
                 backgroundColor: Colors.grey.shade200,
                 color: warningColor,
                 minHeight: 12,
-              ),
-            ),
-
-            const SizedBox(height: 24),
-            OutlinedButton.icon(
-              onPressed: _loadData,
-              icon: const Icon(Icons.refresh),
-              label: const Text('รีเฟรชข้อมูล'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: warningColor,
-                side: BorderSide(color: warningColor),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
               ),
             ),
           ],

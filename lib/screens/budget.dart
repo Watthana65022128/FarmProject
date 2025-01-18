@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/expense_service.dart';
 import '../widgets/expense_pie_chart.dart';
 import 'package:intl/intl.dart';
+import '../utils/refreshable_state.dart';
 
 class BudgetPage extends StatefulWidget {
   final int farmId;
@@ -17,13 +18,18 @@ class BudgetPage extends StatefulWidget {
   State<BudgetPage> createState() => _BudgetPageState();
 }
 
-class _BudgetPageState extends State<BudgetPage> {
+class _BudgetPageState extends State<BudgetPage> with RefreshableState {
   final ExpenseService _expenseService = ExpenseService();
   bool _isLoading = true;
   double _managementExpense = 0;
   double _productionExpense = 0;
   Map<String, dynamic> _managementDetails = {};
   Map<String, dynamic> _productionDetails = {};
+
+   @override
+  void refreshData() {
+    _loadData();
+  }
 
   @override
   void initState() {

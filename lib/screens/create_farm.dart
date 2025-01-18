@@ -42,53 +42,63 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
   }
 
   Future<void> _saveFarm() async {
-    if (_nameController.text.isEmpty ||
-        _startMonth == null ||
-        _endMonth == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('กรุณากรอกข้อมูลให้ครบถ้วน'),
-            backgroundColor: Colors.red),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    final farm = FarmModel(
-      name: _nameController.text,
-      startMonth: _startMonth!,
-      endMonth: _endMonth!,
-    );
-
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
-
-    final success = await _farmService.createFarm(farm, token);
-    setState(() => _isLoading = false);
-
+  if (_nameController.text.isEmpty || _startMonth == null || _endMonth == null) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(success ? 'เพิ่มไร่สำเร็จ' : 'ไม่สามารถเพิ่มไร่ได้'),
-        backgroundColor: success ? Colors.green : Colors.red,
+      const SnackBar(
+        content: Text('กรุณากรอกข้อมูลให้ครบถ้วน'),
+        backgroundColor: Colors.red
+      ),
+    );
+    return;
+  }
+
+  setState(() => _isLoading = true);
+
+  final farm = FarmModel(
+    name: _nameController.text,
+    startMonth: _startMonth!,
+    endMonth: _endMonth!,
+  );
+
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('jwt_token');
+
+  final success = await _farmService.createFarm(farm, token);
+
+  if (!mounted) return;
+
+  setState(() => _isLoading = false);
+
+  if (success) {
+    // แสดง SnackBar ก่อน navigate
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('เพิ่มไร่สำเร็จ'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 1),
       ),
     );
 
-    if (success) {
-      _nameController.clear();
-      setState(() {
-        _startMonth = null;
-        _endMonth = null;
-      });
-    }
+    // รอให้ SnackBar แสดงเสร็จก่อน navigate
+    await Future.delayed(const Duration(seconds: 1));
 
-    Navigator.push(
+    if (!mounted) return;
+
+    // ใช้ pushAndRemoveUntil เพื่อล้าง stack เก่าทั้งหมด
+    Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(
-        builder: (context) => const FarmListPage(),
+      MaterialPageRoute(builder: (context) => const FarmListPage()),
+      (route) => false,
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('ไม่สามารถเพิ่มไร่ได้'),
+        backgroundColor: Colors.red,
       ),
     );
   }
+}
 
   @override
   Widget build(BuildContext context) {
