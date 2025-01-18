@@ -76,6 +76,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 await _authService.logout();
 
+                final token = await _authService.getToken();
+                if (token != null) {
+                  // ถ้ายังมี token อยู่ให้ลบอีกครั้ง
+                  await _authService.logout();
+                }
+
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(

@@ -30,10 +30,16 @@ class CustomTextField extends StatelessWidget {
         labelStyle: TextStyle(color: Colors.grey.shade700),
         prefixIcon: icon != null ? Icon(icon, color: Colors.green) : null,
         helperText: helperText,
-        helperStyle: const TextStyle(fontSize: 13),
+        helperStyle: const TextStyle(
+          fontSize: 12,
+          color: Colors.grey,
+          height: 1.5, // เพิ่มระยะห่างระหว่างบรรทัด
+        ),
+        helperMaxLines: 6,
         filled: true,
         fillColor: Colors.grey.shade100,
-        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey.shade300),

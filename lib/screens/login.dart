@@ -59,9 +59,10 @@ class _LoginPageState extends State<LoginPage> {
 
           await Future.delayed(const Duration(seconds: 1));
 
-          Navigator.pushReplacement(
+          Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const CreateFarmPage()),
+            (route) => false, // ลบทุก route ก่อนหน้า
           );
         } else {
           ScaffoldMessenger.of(context).showSnackBar(

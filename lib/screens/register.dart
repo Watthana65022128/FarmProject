@@ -18,7 +18,8 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   final TextEditingController ageController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
 
@@ -28,7 +29,7 @@ class _RegisterPageState extends State<RegisterPage> {
     if (password.isEmpty) {
       return 'กรุณากรอกรหัสผ่าน';
     }
-    
+
     if (password.length < 6) {
       return 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร';
     }
@@ -166,42 +167,47 @@ class _RegisterPageState extends State<RegisterPage> {
                       labelText: 'ชื่อผู้ใช้',
                       icon: Icons.person,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     CustomTextField(
                       controller: emailController,
                       labelText: 'อีเมล',
                       icon: Icons.email,
                       keyboardType: TextInputType.emailAddress,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     CustomTextField(
                       controller: passwordController,
                       labelText: 'รหัสผ่าน',
                       icon: Icons.lock,
                       obscureText: true,
-                      helperText: 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
+                      helperText: '''รหัสผ่านต้องประกอบด้วย:
+- ความยาวอย่างน้อย 6 ตัวอักษร
+- ตัวพิมพ์เล็กอย่างน้อย 1 ตัว
+- ตัวพิมพ์ใหญ่อย่างน้อย 1 ตัว
+- ตัวเลขอย่างน้อย 1 ตัว
+- อักขระพิเศษ (@\$!%*?&_-) อย่างน้อย 1 ตัว''',
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     CustomTextField(
                       controller: confirmPasswordController,
                       labelText: 'ยืนยันรหัสผ่าน',
                       icon: Icons.lock_outline,
                       obscureText: true,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     CustomTextField(
                       controller: ageController,
                       labelText: 'อายุ',
                       icon: Icons.cake,
                       keyboardType: TextInputType.number,
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     CustomTextField(
                       controller: addressController,
                       labelText: 'ที่อยู่',
                       icon: Icons.home,
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
                       height: 54,
