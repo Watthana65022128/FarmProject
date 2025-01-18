@@ -147,25 +147,56 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
               const SizedBox(height: 20),
               Card(
                 elevation: 4,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(24),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const Text(
+                        'ข้อมูลไร่',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
                       TextField(
                         controller: _nameController,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'ชื่อไร่',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.agriculture),
+                          prefixIcon: const Icon(Icons.agriculture, color: Colors.green),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green, width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 20),
+
+                      // เลือกเดือนเริ่มต้น
                       DropdownButtonFormField<String>(
                         value: _startMonth,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'เดือนเริ่มต้น',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.calendar_today),
+                          prefixIcon: const Icon(Icons.calendar_today, color: Colors.green),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green, width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
                         ),
                         items: months.map((String month) {
                           return DropdownMenuItem<String>(
@@ -174,18 +205,26 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
                           );
                         }).toList(),
                         onChanged: (String? newValue) {
-                          setState(() {
-                            _startMonth = newValue;
-                          });
+                          setState(() => _startMonth = newValue);
                         },
                       ),
                       const SizedBox(height: 20),
+
+                      // เลือกเดือนสิ้นสุด
                       DropdownButtonFormField<String>(
                         value: _endMonth,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'เดือนสิ้นสุด',
-                          border: OutlineInputBorder(),
-                          prefixIcon: Icon(Icons.calendar_today),
+                          prefixIcon: const Icon(Icons.calendar_today, color: Colors.green),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: Colors.green, width: 2),
+                          ),
+                          filled: true,
+                          fillColor: Colors.white,
                         ),
                         items: months.map((String month) {
                           return DropdownMenuItem<String>(
@@ -194,9 +233,7 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
                           );
                         }).toList(),
                         onChanged: (String? newValue) {
-                          setState(() {
-                            _endMonth = newValue;
-                          });
+                          setState(() => _endMonth = newValue);
                         },
                       ),
                     ],
@@ -206,7 +243,7 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 56,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _saveFarm,
                   style: ElevatedButton.styleFrom(
@@ -219,7 +256,7 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
-                          'เพิ่มไร่',
+                          'สร้างไร่',
                           style: TextStyle(fontSize: 18),
                         ),
                 ),
