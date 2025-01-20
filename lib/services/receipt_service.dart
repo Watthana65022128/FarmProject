@@ -31,7 +31,7 @@ class ReceiptService {
           startDate = DateTime(now.year, now.month, now.day);
           break;
         case 'week':
-          startDate = now.subtract(Duration(days: now.weekday - 1));
+          startDate = now.subtract(const Duration(days: 7));
           break;
         case 'month':
           startDate = DateTime(now.year, now.month - 1, now.day);

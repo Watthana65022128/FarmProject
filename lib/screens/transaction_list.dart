@@ -26,7 +26,7 @@ class _TransactionListPageState extends State<TransactionListPage> with Refresha
 
   final List<Map<String, dynamic>> _filterOptions = [
     {'key': 'today', 'label': 'วันนี้'},
-    {'key': 'week', 'label': 'สัปดาห์นี้'},
+    {'key': 'week', 'label': '7วัน'},
     {'key': 'month', 'label': '1 เดือน'},
     {'key': 'threeMonths', 'label': '3 เดือน'},
     {'key': 'sixMonths', 'label': '6 เดือน'},

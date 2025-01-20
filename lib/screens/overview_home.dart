@@ -44,9 +44,10 @@ class _OverviewPageState extends State<OverviewPage> with RefreshableState {
   
 
   Future<void> _loadData() async {
-  setState(() => _isLoading = true);
+  
   try {
     // โหลดข้อมูลงบประมาณ
+    setState(() => _isLoading = true);
     if (widget.farm.budget != null) {
       setState(() {
         _budget = widget.farm.budget!.toString();
