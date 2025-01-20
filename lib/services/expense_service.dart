@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ExpenseService {
   final Dio _dio;
-  static const String baseUrl = 'http://192.168.1.171:3000/api';
+  static const String baseUrl = 'http://10.50.10.11:3000/api';
 
   ExpenseService() : _dio = Dio() {
     _dio.options.baseUrl = baseUrl;

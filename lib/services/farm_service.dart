@@ -4,7 +4,7 @@ import '../models/farm_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FarmService {
-  final String baseUrl = 'http://192.168.1.171:3000/api';
+  final String baseUrl = 'http://10.50.10.11:3000/api';
 
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
