@@ -3,6 +3,7 @@ import '../models/farm_model.dart';
 import '../services/farm_service.dart';
 import './farm_info.dart';
 import 'package:intl/intl.dart';
+import '../screens/create_farm.dart';
 
 class FarmListPage extends StatefulWidget {
   final FarmModel? newFarm;
@@ -56,7 +57,7 @@ class _FarmListPageState extends State<FarmListPage> {
 
       try {
         await _farmService.removeFarm(farm.id!);
-        
+
         // หลังจากลบสำเร็จ อัพเดท state และแสดงข้อความ
         setState(() {
           _farms.removeWhere((f) => f.id == farm.id);
@@ -204,7 +205,7 @@ class _FarmListPageState extends State<FarmListPage> {
 
   Widget _buildFarmCard(FarmModel farm) {
     // ใช้ icon แทนรูปภาพ เนื่องจากยังไม่มี field image
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -246,10 +247,10 @@ class _FarmListPageState extends State<FarmListPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
-                              Icons.agriculture,
-                              color: Colors.green,
-                              size: 32,
-                            ),
+                        Icons.agriculture,
+                        color: Colors.green,
+                        size: 32,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     // Farm Details
@@ -392,6 +393,16 @@ class _FarmListPageState extends State<FarmListPage> {
                           },
                         ),
                       ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateFarmPage()),
+          );
+        },
+        backgroundColor: Colors.green,
+        child: const Icon(Icons.add),
       ),
     );
   }
