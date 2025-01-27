@@ -26,7 +26,7 @@ class _BudgetPageState extends State<BudgetPage> with RefreshableState {
   Map<String, dynamic> _managementDetails = {};
   Map<String, dynamic> _productionDetails = {};
 
-   @override
+  @override
   void refreshData() {
     _loadData();
   }
@@ -41,30 +41,29 @@ class _BudgetPageState extends State<BudgetPage> with RefreshableState {
     try {
       setState(() => _isLoading = true);
 
-      // โหลดข้อมูลค่าใช้จ่ายทั้งสองประเภท
-      final managementData =
-          await _expenseService.getManagementExpenses(widget.farmId);
-      final productionData =
-          await _expenseService.getProductionExpenses(widget.farmId);
+      final managementData = await _expenseService.getManagementExpenses(widget.farmId);
+      final productionData = await _expenseService.getProductionExpenses(widget.farmId);
 
-      setState(() {
-        _managementDetails = managementData;
-        _productionDetails = productionData;
-
-        _managementExpense = managementData.values.fold(
-          0.0,
-          (sum, category) => sum + (category['total'] as double),
-        );
-        _productionExpense = productionData.values.fold(
-          0.0,
-          (sum, category) => sum + (category['total'] as double),
-        );
-
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
       if (mounted) {
+        setState(() {
+          _managementDetails = managementData;
+          _productionDetails = productionData;
+
+          _managementExpense = managementData.values.fold(
+            0.0,
+            (sum, category) => sum + (category['total'] as double? ?? 0.0),
+          );
+          _productionExpense = productionData.values.fold(
+            0.0,
+            (sum, category) => sum + (category['total'] as double? ?? 0.0),
+          );
+
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
         );
@@ -75,8 +74,11 @@ class _BudgetPageState extends State<BudgetPage> with RefreshableState {
   Widget _buildExpenseSummaryCard() {
     final totalExpense = _managementExpense + _productionExpense;
     final remainingBudget = widget.budget - totalExpense;
-    final usagePercentage =
-        (totalExpense / widget.budget * 100).toStringAsFixed(1);
+    
+    // คำนวณเปอร์เซ็นต์การใช้งบประมาณ
+    final usagePercentage = widget.budget > 0 
+        ? ((totalExpense / widget.budget) * 100).clamp(0.0, 100.0)
+        : 0.0;
 
     return Card(
       elevation: 4,
@@ -108,25 +110,51 @@ class _BudgetPageState extends State<BudgetPage> with RefreshableState {
                 _buildBudgetInfoColumn(
                   'คงเหลือ',
                   remainingBudget,
-                  Colors.green,
+                  remainingBudget < 0 ? Colors.red : Colors.green,
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            LinearProgressIndicator(
-              value: totalExpense / widget.budget,
-              backgroundColor: Colors.grey[200],
-              color: Colors.green,
-              minHeight: 8,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'ใช้งบประมาณไปแล้ว $usagePercentage%',
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
+            if (widget.budget > 0) ...[
+              LinearProgressIndicator(
+                value: (totalExpense / widget.budget).clamp(0.0, 1.0),
+                backgroundColor: Colors.grey[200],
+                color: Colors.green,
+                minHeight: 8,
               ),
-            ),
+              const SizedBox(height: 8),
+              Text(
+                'ใช้งบประมาณไปแล้ว ${usagePercentage.toStringAsFixed(1)}%',
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+            ] else ...[
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.warning_amber_rounded, 
+                         color: Colors.orange[700],
+                         size: 24),
+                    const SizedBox(width: 8),
+                    Text(
+                      'กรุณากำหนดวงเงินงบประมาณ',
+                      style: TextStyle(
+                        color: Colors.orange[700],
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -185,7 +213,7 @@ class _BudgetPageState extends State<BudgetPage> with RefreshableState {
               children: [
                 Text(thaiName),
                 Text(
-                  '฿${NumberFormat("#,##0").format(details[key]['total'])}',
+                  '฿${NumberFormat("#,##0").format(details[key]['total'] ?? 0)}',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: color,
@@ -213,7 +241,6 @@ class _BudgetPageState extends State<BudgetPage> with RefreshableState {
                   color: color,
                 ),
                 const SizedBox(width: 8),
-                
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -229,6 +256,7 @@ class _BudgetPageState extends State<BudgetPage> with RefreshableState {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
