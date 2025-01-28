@@ -5,7 +5,7 @@ import 'package:http_parser/http_parser.dart';
 
 class ReceiptService {
   final Dio _dio;
-  static const String baseUrl = 'http://192.168.180.38:3000/api';
+  static const String baseUrl = 'http://192.168.1.171:3000/api';
 
   ReceiptService() : _dio = Dio() {
     _dio.options.baseUrl = baseUrl;

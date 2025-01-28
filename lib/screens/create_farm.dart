@@ -67,7 +67,15 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
 
   if (!mounted) return;
 
-  setState(() => _isLoading = false);
+  setState(() {
+    _isLoading = false;
+    if (success) {
+      // รีเซ็ตข้อมูลในฟอร์ม
+      _nameController.clear();
+      _startMonth = null;
+      _endMonth = null;
+    }
+  });
 
   if (success) {
     // แสดง SnackBar ก่อน navigate
@@ -84,11 +92,10 @@ class _CreateFarmPageState extends State<CreateFarmPage> {
 
     if (!mounted) return;
 
-    // ใช้ pushAndRemoveUntil เพื่อล้าง stack เก่าทั้งหมด
-    Navigator.pushAndRemoveUntil(
+    Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const FarmListPage()),
-      (route) => false,
+      
     );
   } else {
     ScaffoldMessenger.of(context).showSnackBar(

@@ -152,7 +152,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       'assets/logo.png',
                       height: 100,
                     ),
-                    const SizedBox(height: 24),
+                    
                     const Text(
                       'ลงทะเบียน',
                       style: TextStyle(
@@ -161,7 +161,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         color: Colors.green,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 20),
                     CustomTextField(
                       controller: usernameController,
                       labelText: 'ชื่อผู้ใช้',

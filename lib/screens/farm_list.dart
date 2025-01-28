@@ -3,7 +3,6 @@ import '../models/farm_model.dart';
 import '../services/farm_service.dart';
 import './farm_info.dart';
 import 'package:intl/intl.dart';
-import '../screens/create_farm.dart';
 
 class FarmListPage extends StatefulWidget {
   final FarmModel? newFarm;
@@ -393,16 +392,6 @@ class _FarmListPageState extends State<FarmListPage> {
                           },
                         ),
                       ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const CreateFarmPage()),
-          );
-        },
-        backgroundColor: Colors.green,
-        child: const Icon(Icons.add),
       ),
     );
   }
