@@ -3,7 +3,7 @@ import '../models/user_model.dart';
 import '../auth/auth_service.dart';
 import '../screens/register.dart';
 import '../screens/create_farm.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'admin_home.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -33,51 +33,63 @@ class _LoginPageState extends State<LoginPage> {
     try {
       // สร้าง User object จากข้อมูลที่กรอก
       final user = User(
-        username: usernameController.text,
-        email: emailController.text,
+        username: '', // ไม่จำเป็นต้องใส่ตอน login
+        email: emailController.text.trim(),
         password: passwordController.text,
       );
 
-      final response = await _authService.login(user);
+      // เรียก login service
+      await _authService.login(user);
 
-      if (mounted) {
-        if (response) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('เข้าสู่ระบบสำเร็จ'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          // Get token after successful login
-          final prefs = await SharedPreferences.getInstance();
-          final token = await _authService.getToken();
-
-          if (token != null) {
-            prefs.setString('auth_token', token); // Save token locally
-          }
-
-          await Future.delayed(const Duration(seconds: 1));
-
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => const CreateFarmPage()),
-            (route) => false, // ลบทุก route ก่อนหน้า
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('อีเมลหรือรหัสผ่านไม่ถูกต้อง'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      }
-    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง'),
+            content: Text('เข้าสู่ระบบสำเร็จ'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // รอให้ snackbar แสดงเสร็จ
+        await Future.delayed(const Duration(seconds: 1));
+
+        // ดึงข้อมูลผู้ใช้ปัจจุบัน
+        final userData = await _authService.getCurrentUser();
+        final bool isAdmin = userData['isAdmin'] ?? false;
+
+        if (mounted) {
+          if (isAdmin) {
+            // ถ้าเป็น admin ไปที่หน้า AdminHomePage
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const AdminHomePage()),
+              (route) => false,
+            );
+          } else {
+            // ถ้าเป็น user ปกติไปที่หน้า CreateFarmPage
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const CreateFarmPage()),
+              (route) => false,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      // จัดการ error และแสดงข้อความที่เหมาะสม
+      if (mounted) {
+        String errorMessage = 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ';
+        
+        if (e.toString().contains('บัญชีถูกระงับ')) {
+          errorMessage = e.toString();
+        } else if (e.toString().contains('อีเมลหรือรหัสผ่านไม่ถูกต้อง')) {
+          errorMessage = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+        } else if (e.toString().contains('เชื่อมต่อ')) {
+          errorMessage = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
           ),
         );
@@ -89,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
         });
       }
     }
-  }
+}
 
   @override
   Widget build(BuildContext context) {

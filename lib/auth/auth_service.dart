@@ -32,41 +32,54 @@ class AuthService {
   Future<bool> login(User user) async {
     final url = Uri.parse('$baseUrl/login');
     try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': user.email,
-          'password': user.password,
-        }),
-      );
+        final response = await http.post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+                'email': user.email,
+                'password': user.password,
+            }),
+        );
 
-      if (response.statusCode == 200) {
-        // หากเข้าสู่ระบบสำเร็จ
-        print('เข้าสู่ระบบสำเร็จ: ${response.body}');
+        if (response.statusCode == 200) {
+            final data = jsonDecode(response.body);
+            final token = data['token'];
+            final userData = data['user'];
 
-        // ดึง token จาก response body
-        final data = jsonDecode(response.body);
-        final token = data['token'];
-        print('Token before save: $token'); // เช็ค token ก่อนบันทึก
+            // บันทึกข้อมูลทั้งหมดที่จำเป็น
+            final prefs = await SharedPreferences.getInstance();
+            
+            // เก็บ token
+            await prefs.setString('jwt_token', token);
+            
+            // เก็บสถานะ admin
+            await prefs.setBool('isAdmin', userData['isAdmin'] ?? false);
+            
+            // เก็บข้อมูลผู้ใช้
+            await prefs.setString('userId', userData['id'].toString());
+            await prefs.setString('username', userData['username']);
+            await prefs.setString('email', userData['email']);
+            
+            // เช็คสถานะการแบน
+            if (userData['isBanned'] == true) {
+                final banReason = userData['bannedReason'] ?? 'ไม่ระบุเหตุผล';
+                throw Exception('บัญชีถูกระงับการใช้งาน: $banReason');
+            }
 
-        // เก็บ token ลงใน SharedPreferences
-        await _saveToken(token);
-
-        // เช็คว่าบันทึกสำเร็จไหม
-        final savedToken = await getToken();
-        print('Token after save: $savedToken');
-
-        return true;
-      } else {
-        print('เกิดข้อผิดพลาดในการเข้าสู่ระบบ: ${response.body}');
-        return false;
-      }
+            print('Login successful: ${userData['username']}');
+            print('Is Admin: ${userData['isAdmin']}');
+            
+            return true;
+        } else {
+            final error = jsonDecode(response.body);
+            print('Login failed: ${error['error']}');
+            throw Exception(error['error'] ?? 'เข้าสู่ระบบไม่สำเร็จ');
+        }
     } catch (e) {
-      print('Error: $e');
-      return false;
+        print('Login error: $e');
+        throw Exception(e.toString());
     }
-  }
+}
 
   // ฟังก์ชันดึงข้อมูลโปรไฟล์
   Future<User?> getUserProfile() async {
@@ -166,4 +179,14 @@ class AuthService {
     print('Checking token: $token');
     return token != null && token.isNotEmpty;
   }
+
+  Future<Map<String, dynamic>> getCurrentUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+        'userId': prefs.getString('userId'),
+        'username': prefs.getString('username'),
+        'email': prefs.getString('email'),
+        'isAdmin': prefs.getBool('isAdmin') ?? false,
+    };
+}
 }
