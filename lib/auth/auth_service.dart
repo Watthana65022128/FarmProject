@@ -62,8 +62,11 @@ class AuthService {
             
             // เช็คสถานะการแบน
             if (userData['isBanned'] == true) {
-                final banReason = userData['bannedReason'] ?? 'ไม่ระบุเหตุผล';
-                throw Exception('บัญชีถูกระงับการใช้งาน: $banReason');
+                final banInfo = {
+                    'reason': userData['bannedReason'] ?? 'ไม่ระบุเหตุผล',
+                    'bannedAt': userData['bannedAt'],
+                };
+                throw Exception('บัญชีถูกระงับการใช้งาน: ${jsonEncode(banInfo)}');
             }
 
             print('Login successful: ${userData['username']}');

@@ -4,6 +4,7 @@ import '../auth/auth_service.dart';
 import '../screens/register.dart';
 import '../screens/create_farm.dart';
 import 'admin_home.dart';
+import '../widgets/ban_notification_dialog.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -22,85 +23,97 @@ class _LoginPageState extends State<LoginPage> {
   final AuthService _authService = AuthService();
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+  if (!_formKey.currentState!.validate()) {
+    return;
+  }
 
-    setState(() {
-      _isLoading = true;
-    });
+  setState(() {
+    _isLoading = true;
+  });
 
-    try {
-      // สร้าง User object จากข้อมูลที่กรอก
-      final user = User(
-        username: '', // ไม่จำเป็นต้องใส่ตอน login
-        email: emailController.text.trim(),
-        password: passwordController.text,
+  try {
+    // สร้าง User object จากข้อมูลที่กรอก
+    final user = User(
+      username: '', // ไม่จำเป็นต้องใส่ตอน login
+      email: emailController.text.trim(),
+      password: passwordController.text,
+    );
+
+    // เรียก login service
+    await _authService.login(user);
+
+    // ดึงข้อมูลผู้ใช้ปัจจุบัน
+    final userData = await _authService.getCurrentUser();
+    final bool isAdmin = userData['isAdmin'] ?? false;
+
+    if (mounted) {
+      // แสดง SnackBar สำเร็จ
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('เข้าสู่ระบบสำเร็จ'),
+          backgroundColor: Colors.green,
+        ),
       );
 
-      // เรียก login service
-      await _authService.login(user);
+      // รอให้ snackbar แสดงเสร็จ
+      await Future.delayed(const Duration(seconds: 1));
 
+      // นำทางไปหน้าที่เหมาะสม
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('เข้าสู่ระบบสำเร็จ'),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-        // รอให้ snackbar แสดงเสร็จ
-        await Future.delayed(const Duration(seconds: 1));
-
-        // ดึงข้อมูลผู้ใช้ปัจจุบัน
-        final userData = await _authService.getCurrentUser();
-        final bool isAdmin = userData['isAdmin'] ?? false;
-
-        if (mounted) {
-          if (isAdmin) {
-            // ถ้าเป็น admin ไปที่หน้า AdminHomePage
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const AdminHomePage()),
-              (route) => false,
-            );
-          } else {
-            // ถ้าเป็น user ปกติไปที่หน้า CreateFarmPage
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => const CreateFarmPage()),
-              (route) => false,
-            );
-          }
+        if (isAdmin) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const AdminHomePage()),
+            (route) => false,
+          );
+        } else {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateFarmPage()),
+            (route) => false,
+          );
         }
       }
-    } catch (e) {
-      // จัดการ error และแสดงข้อความที่เหมาะสม
-      if (mounted) {
-        String errorMessage = 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ';
+    }
+  } catch (e) {
+    if (mounted) {
+      // ตรวจสอบว่าเป็น error จากการถูกแบนหรือไม่
+      if (e.toString().contains('บัญชีถูกระงับการใช้งาน')) {
+        // แยก reason ออกจาก error message
+        final banReason = e.toString().split(': ')[1];
         
-        if (e.toString().contains('บัญชีถูกระงับ')) {
-          errorMessage = e.toString();
-        } else if (e.toString().contains('อีเมลหรือรหัสผ่านไม่ถูกต้อง')) {
-          errorMessage = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
-        } else if (e.toString().contains('เชื่อมต่อ')) {
-          errorMessage = 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้';
-        }
-
+        // แสดง dialog แจ้งเตือนการถูกแบน
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return BanNotificationDialog(
+              banReason: banReason,
+              bannedAt: DateTime.now(), // หรือดึงจาก response ถ้ามี
+            );
+          },
+        );
+      } else {
+        // แสดง error ทั่วไป
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(errorMessage),
+            content: Text(
+              e.toString().contains('อีเมลหรือรหัสผ่านไม่ถูกต้อง')
+                  ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
+                  : 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ',
+            ),
             backgroundColor: Colors.red,
           ),
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
     }
+  } finally {
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 }
 
   @override
